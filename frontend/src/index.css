@@ -49,8 +49,8 @@
   --danger: #EF4444;
   --info: #3B82F6;
   
-  --toastify-color-light: #ffffff;
-  --toastify-text-color-light: #18181b;
+  --toastify-color-light: var(--card);
+  --toastify-text-color-light: var(--primary-text);
 }
 
 .dark {
@@ -63,8 +63,8 @@
   --secondary-text: #A1A1AA;
   --muted-text: #71717A;
   
-  --toastify-color-dark: #18181b;
-  --toastify-text-color-dark: #fafafa;
+  --toastify-color-dark: var(--card);
+  --toastify-text-color-dark: var(--primary-text);
 }
 
 @layer base {
@@ -149,14 +149,37 @@
 
 /* Custom Toast customization to match styling */
 .Toastify__toast {
+  background-color: var(--card) !important;
+  color: var(--primary-text) !important;
   border-radius: 8px !important;
   border: 1px solid var(--border) !important;
   font-family: var(--font-sans) !important;
   font-size: 0.8125rem !important;
+  font-weight: 500 !important;
   box-shadow: var(--shadow-premium) !important;
+  padding: 12px 16px !important;
+  min-height: 48px !important;
 }
 .dark .Toastify__toast {
   box-shadow: var(--shadow-premium-dark) !important;
+}
+.Toastify__toast-body {
+  padding: 0 !important;
+  margin: 0 !important;
+}
+.Toastify__toast-icon {
+  width: 15px !important;
+  height: 15px !important;
+  margin-right: 10px !important;
+}
+.Toastify__close-button {
+  color: var(--muted-text) !important;
+  opacity: 0.6;
+  align-self: center !important;
+}
+.Toastify__close-button:hover {
+  color: var(--primary-text) !important;
+  opacity: 1;
 }
 
 /* Premium glimmer hover cards (Linear/Jira theme) */
