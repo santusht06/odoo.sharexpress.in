@@ -29,6 +29,7 @@ import Button from "../components/ui/Button";
 import Input from "../components/ui/Input";
 import Drawer from "../components/ui/Drawer";
 import StatusBadge from "../components/ui/StatusBadge";
+import ConfirmModal from "../components/ui/ConfirmModal";
 import { TableContainer, Table, Thead, Tbody, Tr, Th, Td, EmptyState } from "../components/ui/TableComponents";
 
 export default function Audits() {
@@ -47,6 +48,8 @@ export default function Audits() {
   const [activeCycle, setActiveCycle] = useState(null);
   const [discrepancyReport, setDiscrepancyReport] = useState(null);
   const [activeTab, setActiveTab] = useState("checklist"); // "checklist" or "incidents"
+  const [showConfirmClose, setShowConfirmClose] = useState(false);
+  const [cycleToClose, setCycleToClose] = useState(null);
 
   const refreshData = () => {
     dispatch(fetchAuditCycles());
@@ -120,27 +123,31 @@ export default function Audits() {
       .catch((err) => toast.error(err));
   };
 
-  const handleCloseCycle = (cycleId) => {
-    if (window.confirm("Closing the cycle will lock all entries and update missing assets to 'Lost'. Proceed?")) {
-      dispatch(closeAuditCycle(cycleId)).unwrap()
-        .then(() => {
-          toast.success("Audit cycle closed. Asset directory records updated.");
-          refreshData();
-          // Reload cycle and report status
-          dispatch(fetchAuditCycles()).unwrap()
-            .then((newCycles) => {
-              const updated = newCycles.find(c => c.cycle_id === cycleId);
-              if (updated) {
-                setActiveCycle(updated);
-              }
-            });
-          dispatch(fetchDiscrepancyReport(cycleId)).unwrap()
-            .then((data) => {
-              setDiscrepancyReport(data);
-            });
-        })
-        .catch((err) => toast.error(err));
-    }
+  const handleCloseCycleClick = (cycleId) => {
+    setCycleToClose(cycleId);
+    setShowConfirmClose(true);
+  };
+
+  const executeCloseCycle = () => {
+    if (!cycleToClose) return;
+    dispatch(closeAuditCycle(cycleToClose)).unwrap()
+      .then(() => {
+        toast.success("Audit cycle closed. Asset directory records updated.");
+        refreshData();
+        // Reload cycle and report status
+        dispatch(fetchAuditCycles()).unwrap()
+          .then((newCycles) => {
+            const updated = newCycles.find(c => c.cycle_id === cycleToClose);
+            if (updated) {
+              setActiveCycle(updated);
+            }
+          });
+        dispatch(fetchDiscrepancyReport(cycleToClose)).unwrap()
+          .then((data) => {
+            setDiscrepancyReport(data);
+          });
+      })
+      .catch((err) => toast.error(err));
   };
 
   // Compute live statistics from the loaded discrepancy report
@@ -250,7 +257,7 @@ export default function Audits() {
                 </div>
                 {user?.role === "ADMIN" && activeCycle.status === "Open" && (
                   <Button
-                    onClick={() => handleCloseCycle(activeCycle.cycle_id)}
+                    onClick={() => handleCloseCycleClick(activeCycle.cycle_id)}
                     variant="danger"
                     size="sm"
                     className="flex items-center gap-1.5 shrink-0 self-start sm:self-center"
@@ -539,6 +546,20 @@ export default function Audits() {
           </div>
         </form>
       </Drawer>
+
+      <ConfirmModal
+        isOpen={showConfirmClose}
+        onClose={() => {
+          setShowConfirmClose(false);
+          setCycleToClose(null);
+        }}
+        onConfirm={executeCloseCycle}
+        title="Close & Lock Audit Cycle"
+        message="Closing this cycle will lock all scanned entries and update missing assets to 'Lost'. Proceed?"
+        confirmText="Close Cycle"
+        cancelText="Cancel"
+        variant="danger"
+      />
     </div>
   );
 }

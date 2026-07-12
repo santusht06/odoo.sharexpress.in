@@ -8,6 +8,7 @@ import Button from "../components/ui/Button";
 import Input from "../components/ui/Input";
 import Drawer from "../components/ui/Drawer";
 import StatusBadge from "../components/ui/StatusBadge";
+import ConfirmModal from "../components/ui/ConfirmModal";
 import { TableContainer, Table, Thead, Tbody, Tr, Th, Td, EmptyState } from "../components/ui/TableComponents";
 
 export default function Bookings() {
@@ -23,6 +24,8 @@ export default function Bookings() {
   const [purpose, setPurpose] = useState("");
 
   const [showAddForm, setShowAddForm] = useState(false);
+  const [showConfirmCancel, setShowConfirmCancel] = useState(false);
+  const [bookingToCancel, setBookingToCancel] = useState(null);
 
   // Calendar States
   const [viewDate, setViewDate] = useState(new Date());
@@ -87,16 +90,20 @@ export default function Bookings() {
     }
   };
 
-  const handleCancel = (bookingId) => {
-    if (window.confirm("Are you sure you want to cancel this booking?")) {
-      dispatch(cancelBooking(bookingId))
-        .unwrap()
-        .then(() => {
-          toast.success("Booking cancelled");
-          refreshData();
-        })
-        .catch((err) => toast.error(err));
-    }
+  const handleCancelClick = (bookingId) => {
+    setBookingToCancel(bookingId);
+    setShowConfirmCancel(true);
+  };
+
+  const executeCancelBooking = () => {
+    if (!bookingToCancel) return;
+    dispatch(cancelBooking(bookingToCancel))
+      .unwrap()
+      .then(() => {
+        toast.success("Booking cancelled");
+        refreshData();
+      })
+      .catch((err) => toast.error(err));
   };
 
   // Calendar calculations
@@ -296,7 +303,7 @@ export default function Bookings() {
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => handleCancel(booking.booking_id)}
+                            onClick={() => handleCancelClick(booking.booking_id)}
                             className="text-status-danger hover:bg-status-danger/10 p-1"
                           >
                             <Trash2 className="h-4 w-4" />
@@ -395,6 +402,20 @@ export default function Bookings() {
           </div>
         </form>
       </Drawer>
+
+      <ConfirmModal
+        isOpen={showConfirmCancel}
+        onClose={() => {
+          setShowConfirmCancel(false);
+          setBookingToCancel(null);
+        }}
+        onConfirm={executeCancelBooking}
+        title="Cancel Reservation Booking"
+        message="Are you sure you want to cancel this reservation booking? This action cannot be undone."
+        confirmText="Cancel Booking"
+        cancelText="Go Back"
+        variant="danger"
+      />
     </div>
   );
 }
