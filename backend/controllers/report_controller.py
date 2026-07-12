@@ -62,7 +62,8 @@ class ReportController:
                     "asset_id": asset["asset_id"],
                     "asset_name": asset["name"],
                     "asset_tag": asset["asset_tag"],
-                    "maintenance_count": item["count"]
+                    "maintenance_count": item["count"],
+                    "request_count": item["count"]
                 })
         return {"success": True, "data": results}
 
