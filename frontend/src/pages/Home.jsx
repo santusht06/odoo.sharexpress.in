@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { 
   Boxes, 
@@ -7,10 +7,43 @@ import {
   ClipboardCheck, 
   BarChart3, 
   ArrowRight,
-  ShieldCheck
+  ShieldCheck,
+  CheckCircle2,
+  Zap,
+  AlertCircle
 } from "lucide-react";
 import { motion } from "framer-motion";
 import Button from "../components/ui/Button";
+
+// Pulse Dot Helper
+function PulseDot({ color = "bg-status-success" }) {
+  return (
+    <span className="relative inline-flex h-2 w-2">
+      <span className={`animate-ping absolute inline-flex h-full w-full rounded-full ${color} opacity-60`} />
+      <span className={`relative inline-flex rounded-full h-2 w-2 ${color}`} />
+    </span>
+  );
+}
+
+// Activity Card Helper
+function ActivityCard({ icon: Icon, label, value, color, delay }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, delay }}
+      className="bg-bg-card border border-border-primary rounded-xl px-4 py-3 shadow-sm flex items-center gap-3 min-w-[170px] text-left"
+    >
+      <div className={`p-2 rounded-lg ${color}`}>
+        <Icon className="h-4 w-4" />
+      </div>
+      <div>
+        <p className="text-[10px] text-text-muted font-medium">{label}</p>
+        <p className="text-sm font-semibold text-text-primary">{value}</p>
+      </div>
+    </motion.div>
+  );
+}
 
 export default function Home() {
   const containerVariants = {
@@ -89,46 +122,87 @@ export default function Home() {
       </header>
 
       {/* Hero Section */}
-      <section className="relative py-28 px-6 sm:px-12 flex flex-col items-center text-center max-w-4xl mx-auto space-y-7 z-10">
-        <motion.span 
-          initial={{ opacity: 0, scale: 0.95 }}
+      <section className="relative py-28 px-6 sm:px-12 flex flex-col items-center text-center max-w-5xl mx-auto space-y-7 z-10">
+        <motion.span
+          initial={{ opacity: 0, scale: 0.92 }}
           animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.3 }}
+          transition={{ duration: 0.35 }}
           className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-semibold bg-bg-secondary text-accent-purple border border-border-primary"
         >
-          <ShieldCheck className="h-3.5 w-3.5" /> System v1.0 Launched
+          <PulseDot />
+          <span>System v1.0 — Now live</span>
         </motion.span>
-        
-        <motion.h1 
-          initial={{ opacity: 0, y: 15 }}
+
+        <motion.h1
+          initial={{ opacity: 0, y: 18 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: 0.1 }}
-          className="text-4xl sm:text-5xl font-light tracking-tight leading-[1.1] text-text-primary"
+          transition={{ duration: 0.45, delay: 0.12 }}
+          className="text-4xl sm:text-5xl lg:text-6xl font-light tracking-tight leading-[1.1] text-text-primary"
         >
-          The asset tracker designed <br />
-          <span className="font-normal text-transparent bg-clip-text bg-gradient-to-r from-text-primary to-text-muted">for high-output teams.</span>
+          The asset tracker designed
+          <br />
+          <span className="font-semibold text-text-primary">
+            for high-output teams.
+          </span>
         </motion.h1>
-        
-        <motion.p 
-          initial={{ opacity: 0, y: 15 }}
+
+        <motion.p
+          initial={{ opacity: 0, y: 18 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: 0.2 }}
-          className="text-xs sm:text-sm text-text-secondary max-w-lg mx-auto leading-relaxed"
+          transition={{ duration: 0.45, delay: 0.22 }}
+          className="text-sm text-text-secondary max-w-xl mx-auto leading-relaxed"
         >
-          Manage hardware lifecycles, book shared team labs, route device repair requests, and verify inventories in real-time. Beautifully minimal, clean, and completely integrated.
+          Manage hardware lifecycles, book shared team labs, route device repair
+          requests, and verify inventories in real-time. Beautifully minimal,
+          clean, and completely integrated.
         </motion.p>
-        
-        <motion.div 
-          initial={{ opacity: 0, y: 15 }}
+
+        <motion.div
+          initial={{ opacity: 0, y: 18 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: 0.3 }}
-          className="pt-4"
+          transition={{ duration: 0.45, delay: 0.32 }}
+          className="flex items-center justify-center gap-3 pt-2"
         >
           <Link to="/signin">
-            <Button variant="primary" size="lg" className="shadow-lg">
+            <Button variant="primary" size="lg" className="shadow-sm">
               Open App <ArrowRight className="h-4 w-4" />
             </Button>
           </Link>
+          <a href="#features">
+            <Button variant="secondary" size="lg">
+              Explore Features
+            </Button>
+          </a>
+        </motion.div>
+
+        {/* Floating activity cards */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.6, delay: 0.5 }}
+          className="flex flex-wrap justify-center gap-3 pt-6"
+        >
+          <ActivityCard
+            icon={CheckCircle2}
+            label="Last audit"
+            value="Passed — 2h ago"
+            color="text-status-success bg-status-success/8"
+            delay={0.55}
+          />
+          <ActivityCard
+            icon={Zap}
+            label="Assets assigned today"
+            value="14 devices"
+            color="text-accent-purple bg-accent-purple/8"
+            delay={0.65}
+          />
+          <ActivityCard
+            icon={AlertCircle}
+            label="Maintenance requests"
+            value="3 pending"
+            color="text-status-warning bg-status-warning/8"
+            delay={0.75}
+          />
         </motion.div>
       </section>
 
