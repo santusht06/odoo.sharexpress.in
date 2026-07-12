@@ -18,7 +18,7 @@ class DashboardController:
             alloc_filter["allocated_to"] = user_id
             booking_filter["booked_by"] = user_id
             transfer_filter["$or"] = [{"requested_by": user_id}, {"to_user": user_id}, {"from_user": user_id}]
-            maintenance_filter["raised_by"] = user_id
+            maintenance_filter["$or"] = [{"raised_by": user_id}, {"created_by": user_id}]
 
         # 1. Assets count
         assets_available = await db.assets.count_documents({"status": "Available"})

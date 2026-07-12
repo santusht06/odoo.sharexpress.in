@@ -70,7 +70,7 @@ class MaintenanceController:
                 doc["asset_location"] = asset.get("location")
 
             # Join owner details
-            user = await db.users.find_one({"user_id": doc.get("raised_by")})
+            user = await db.users.find_one({"user_id": doc.get("raised_by") or doc.get("created_by")})
             if user:
                 doc["raised_by_name"] = user.get("name")
 
@@ -109,7 +109,7 @@ class MaintenanceController:
         
         # Notify
         await notify_user(
-            req["raised_by"],
+            req.get("raised_by") or req.get("created_by") or actor_id,
             f"MAINTENANCE_{status_str.upper()}",
             f"Maintenance Request {status_str}",
             f"Your maintenance request for asset '{asset.get('name') if asset else 'Resource'}' was {status_str.lower()}."
@@ -171,7 +171,7 @@ class MaintenanceController:
 
         # Notify
         await notify_user(
-            req["raised_by"],
+            req.get("raised_by") or req.get("created_by") or actor_id,
             "MAINTENANCE_RESOLVED",
             "Maintenance Resolved",
             f"Maintenance for '{asset.get('name') if asset else 'Resource'}' has been marked Resolved."

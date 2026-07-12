@@ -17,6 +17,7 @@ export default function OrganizationSetup() {
   const { items: departments } = useSelector((state) => state.departments);
   const { items: categories } = useSelector((state) => state.categories);
   const { items: employees } = useSelector((state) => state.employees);
+  const { user } = useSelector((state) => state.auth);
 
   // Forms states
   const [deptName, setDeptName] = useState("");
