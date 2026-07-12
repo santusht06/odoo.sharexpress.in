@@ -10,8 +10,13 @@ import {
   CheckCircle2, 
   Layers, 
   CalendarCheck, 
-  RefreshCw 
+  RefreshCw,
+  ArrowUpRight,
+  TrendingUp,
+  Boxes
 } from "lucide-react";
+import { motion } from "framer-motion";
+import Button from "../components/ui/Button";
 
 export default function Dashboard() {
   const dispatch = useDispatch();
@@ -27,138 +32,181 @@ export default function Dashboard() {
       label: "Assets Available",
       value: kpis.assets_available,
       icon: CheckCircle2,
-      color: "text-emerald-600 bg-emerald-50 border-emerald-200",
+      color: "border-status-success/20 text-status-success",
+      bgGradient: "from-status-success/5 to-transparent"
     },
     {
       label: "Assets Allocated",
       value: kpis.assets_allocated,
       icon: Layers,
-      color: "text-blue-600 bg-blue-50 border-blue-200",
+      color: "border-status-info/20 text-status-info",
+      bgGradient: "from-status-info/5 to-transparent"
     },
     {
       label: "Maintenance Today",
       value: kpis.maintenance_today,
       icon: Wrench,
-      color: "text-amber-600 bg-amber-50 border-amber-200",
+      color: "border-status-warning/20 text-status-warning",
+      bgGradient: "from-status-warning/5 to-transparent"
     },
     {
       label: "Active Bookings",
       value: kpis.active_bookings,
       icon: CalendarCheck,
-      color: "text-indigo-600 bg-indigo-50 border-indigo-200",
+      color: "border-accent-purple/20 text-accent-purple",
+      bgGradient: "from-accent-purple/5 to-transparent"
     },
     {
       label: "Pending Transfers",
       value: kpis.pending_transfers,
       icon: RefreshCw,
-      color: "text-purple-600 bg-purple-50 border-purple-200",
+      color: "border-accent-purple/10 text-accent-purple/80",
+      bgGradient: "from-accent-purple/5 to-transparent"
     },
     {
       label: "Upcoming Returns",
       value: kpis.upcoming_returns,
       icon: CalendarCheck,
-      color: "text-slate-600 bg-slate-50 border-slate-200",
+      color: "border-border-primary text-text-secondary",
+      bgGradient: "from-bg-secondary to-transparent"
     },
     {
       label: "Overdue Returns",
       value: kpis.overdue_returns,
       icon: AlertTriangle,
       color: kpis.overdue_returns > 0 
-        ? "text-rose-600 bg-rose-50 border-rose-200 animate-pulse" 
-        : "text-slate-600 bg-slate-50 border-slate-200",
+        ? "border-status-danger/25 text-status-danger animate-pulse" 
+        : "border-border-primary text-text-secondary",
+      bgGradient: kpis.overdue_returns > 0 ? "from-status-danger/5 to-transparent" : "from-bg-secondary to-transparent"
     }
   ];
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="space-y-8 text-text-primary">
+      {/* Welcome header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h2 className="text-xl font-bold text-slate-900 tracking-tight">System Dashboard</h2>
-          <p className="text-xs text-slate-500 font-semibold mt-1">Real-time enterprise resource status overview</p>
+          <h2 className="text-lg font-semibold tracking-tight text-text-primary">System Overview</h2>
+          <p className="text-xs text-text-muted mt-0.5 font-medium">Real-time status overview of workspace and enterprise physical resources</p>
         </div>
-        <div className="text-xs text-slate-500 font-bold bg-white px-3 py-1 border border-slate-200 rounded">
+        <div className="text-[10px] text-text-muted font-semibold bg-bg-secondary px-3 py-1.5 border border-border-primary rounded-lg self-start">
           Last updated: {new Date().toLocaleTimeString()}
         </div>
       </div>
 
-      {/* KPI Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* KPI Cards Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4.5">
         {cards.map((card, idx) => {
           const Icon = card.icon;
           return (
-            <div key={idx} className={`jira-card p-5 flex items-center justify-between border ${card.color}`}>
-              <div>
-                <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">{card.label}</p>
-                <h3 className="text-2xl font-extrabold text-slate-800 mt-2">{loading ? "..." : card.value}</h3>
+            <motion.div
+              key={idx}
+              whileHover={{ y: -1 }}
+              transition={{ duration: 0.15 }}
+              className={`bg-bg-card p-5 rounded-xl border border-border-primary relative overflow-hidden group shadow-sm flex flex-col justify-between`}
+            >
+              {/* Soft Gradient Overlay */}
+              <div className={`absolute inset-0 bg-gradient-to-br ${card.bgGradient} opacity-30 pointer-events-none`} />
+
+              <div className="flex justify-between items-start z-10">
+                <p className="text-[10px] font-semibold text-text-muted uppercase tracking-wider">{card.label}</p>
+                <div className={`p-1.5 rounded-lg border bg-bg-secondary ${card.color}`}>
+                  <Icon className="h-4 w-4" />
+                </div>
               </div>
-              <div className="p-3 rounded-full bg-white/60">
-                <Icon className="h-5 w-5" />
+              <div className="mt-4 z-10">
+                <h3 className="text-2xl font-light tracking-tight text-text-primary">
+                  {loading ? (
+                    <span className="block h-6 w-8 bg-border-primary/45 rounded animate-pulse" />
+                  ) : (
+                    card.value
+                  )}
+                </h3>
               </div>
-            </div>
+            </motion.div>
           );
         })}
       </div>
 
-      {/* Quick Actions & Shortcut panels */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-8">
-        <div className="jira-card p-6 lg:col-span-2">
-          <h3 className="text-sm font-bold text-slate-800 border-b border-slate-100 pb-3 uppercase tracking-wider">
-            Quick System Actions
-          </h3>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-4">
+      {/* Quick Actions & Profiles */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="bg-bg-card border border-border-primary rounded-xl p-6 lg:col-span-2 space-y-4 shadow-sm">
+          <div className="border-b border-border-primary/80 pb-3 flex items-center justify-between">
+            <h3 className="text-xs font-semibold text-text-primary uppercase tracking-wider">
+              Quick Shortcuts
+            </h3>
+            <span className="text-[10px] text-text-muted font-medium">Quick create tools</span>
+          </div>
+          
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             {["ADMIN", "ASSET_MANAGER"].includes(user?.role) && (
               <Link
                 to="/assets"
-                className="flex flex-col items-center justify-center p-4 border border-blue-200 rounded bg-blue-50/30 hover:bg-blue-50 transition text-center group"
+                className="flex flex-col items-center justify-center p-5 border border-border-primary rounded-xl bg-bg-secondary/40 hover:bg-bg-secondary hover:border-accent-purple/20 transition-all text-center group shadow-sm"
               >
-                <PlusCircle className="h-6 w-6 text-blue-600 group-hover:scale-110 transition-transform" />
-                <span className="text-xs font-bold text-blue-800 mt-2">Register Asset</span>
-                <span className="text-[10px] text-slate-500 mt-1">Add new physical asset</span>
+                <div className="p-2.5 rounded-lg bg-accent-purple/10 text-accent-purple border border-accent-purple/20 group-hover:scale-105 transition-transform">
+                  <PlusCircle className="h-5 w-5" />
+                </div>
+                <span className="text-xs font-medium text-text-primary mt-3">Register Asset</span>
+                <span className="text-[10px] text-text-muted mt-1 leading-snug">Add a new physical asset</span>
               </Link>
             )}
 
             <Link
               to="/bookings"
-              className="flex flex-col items-center justify-center p-4 border border-indigo-200 rounded bg-indigo-50/30 hover:bg-indigo-50 transition text-center group"
+              className="flex flex-col items-center justify-center p-5 border border-border-primary rounded-xl bg-bg-secondary/40 hover:bg-bg-secondary hover:border-status-info/20 transition-all text-center group shadow-sm"
             >
-              <BookMarked className="h-6 w-6 text-indigo-600 group-hover:scale-110 transition-transform" />
-              <span className="text-xs font-bold text-indigo-800 mt-2">Book Resource</span>
-              <span className="text-[10px] text-slate-500 mt-1">Reserve shared facility</span>
+              <div className="p-2.5 rounded-lg bg-status-info/10 text-status-info border border-status-info/20 group-hover:scale-105 transition-transform">
+                <BookMarked className="h-5 w-5" />
+              </div>
+              <span className="text-xs font-medium text-text-primary mt-3">Book Resource</span>
+              <span className="text-[10px] text-text-muted mt-1 leading-snug">Reserve meeting rooms or labs</span>
             </Link>
 
             <Link
               to="/maintenance"
-              className="flex flex-col items-center justify-center p-4 border border-amber-200 rounded bg-amber-50/30 hover:bg-amber-50 transition text-center group"
+              className="flex flex-col items-center justify-center p-5 border border-border-primary rounded-xl bg-bg-secondary/40 hover:bg-bg-secondary hover:border-status-warning/20 transition-all text-center group shadow-sm"
             >
-              <Wrench className="h-6 w-6 text-amber-600 group-hover:scale-110 transition-transform" />
-              <span className="text-xs font-bold text-amber-800 mt-2">Request Maintenance</span>
-              <span className="text-[10px] text-slate-500 mt-1">Report asset hardware issue</span>
+              <div className="p-2.5 rounded-lg bg-status-warning/10 text-status-warning border border-status-warning/20 group-hover:scale-105 transition-transform">
+                <Wrench className="h-5 w-5" />
+              </div>
+              <span className="text-xs font-medium text-text-primary mt-3">Request Maintenance</span>
+              <span className="text-[10px] text-text-muted mt-1 leading-snug">Report system hardware issues</span>
             </Link>
           </div>
         </div>
 
-        <div className="jira-card p-6 flex flex-col justify-between">
+        {/* User Card info */}
+        <div className="bg-bg-card border border-border-primary rounded-xl p-6 flex flex-col justify-between shadow-sm">
           <div>
-            <h3 className="text-sm font-bold text-slate-800 border-b border-slate-100 pb-3 uppercase tracking-wider">
-              Profile Summary
-            </h3>
-            <div className="mt-4 space-y-2">
-              <div className="flex justify-between text-xs">
-                <span className="text-slate-500 font-semibold">User Role:</span>
-                <span className="font-bold text-slate-700">{user?.role}</span>
+            <div className="border-b border-border-primary/80 pb-3">
+              <h3 className="text-xs font-semibold text-text-primary uppercase tracking-wider">
+                My Workspace Profiler
+              </h3>
+            </div>
+            
+            <div className="mt-5 space-y-3.5">
+              <div className="flex justify-between items-center text-xs">
+                <span className="text-text-muted font-medium">Access Privileges:</span>
+                <span className="font-semibold text-text-primary uppercase tracking-wider text-[10px] bg-bg-secondary border border-border-primary px-2 py-0.5 rounded-md">
+                  {user?.role}
+                </span>
               </div>
-              <div className="flex justify-between text-xs">
-                <span className="text-slate-500 font-semibold">Department:</span>
-                <span className="font-bold text-slate-700">{user?.department_name || "Unassigned"}</span>
+              <div className="flex justify-between items-center text-xs">
+                <span className="text-text-muted font-medium">Department Unit:</span>
+                <span className="font-semibold text-text-secondary">{user?.department_name || "Central Unit"}</span>
               </div>
-              <div className="flex justify-between text-xs">
-                <span className="text-slate-500 font-semibold">Email:</span>
-                <span className="font-bold text-slate-700 truncate max-w-[150px]">{user?.email}</span>
+              <div className="flex justify-between items-center text-xs">
+                <span className="text-text-muted font-medium">Verified Email:</span>
+                <span className="font-semibold text-text-secondary truncate max-w-[160px]" title={user?.email}>
+                  {user?.email}
+                </span>
               </div>
             </div>
           </div>
-          <div className="bg-slate-50 p-3 border border-slate-100 rounded text-[11px] text-slate-500 font-medium text-center mt-4">
-            Use the sidebar navigation to manage specific features.
+          
+          <div className="bg-bg-secondary p-3 border border-border-primary rounded-lg text-[10px] text-text-muted font-medium text-center mt-6">
+            Press <span className="font-bold text-text-primary border border-border-primary bg-bg-card px-1 py-0.5 rounded text-[9px] font-mono mx-0.5">⌘ K</span> to show floating command bar operations.
           </div>
         </div>
       </div>

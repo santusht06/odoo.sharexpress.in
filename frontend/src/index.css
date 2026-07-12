@@ -1,67 +1,160 @@
 @import "tailwindcss";
 
+@theme {
+  --font-sans: 'Geist', 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  
+  --color-bg-primary: var(--background);
+  --color-bg-secondary: var(--secondary-bg);
+  --color-bg-card: var(--card);
+  --color-border-primary: var(--border);
+  --color-text-primary: var(--primary-text);
+  --color-text-secondary: var(--secondary-text);
+  --color-text-muted: var(--muted-text);
+  --color-accent-purple: var(--accent);
+  
+  --color-status-success: var(--success);
+  --color-status-warning: var(--warning);
+  --color-status-danger: var(--danger);
+  --color-status-info: var(--info);
+  
+  --shadow-premium: 0 1px 3px rgba(0,0,0,0.05), 0 10px 40px -10px rgba(0,0,0,0.07);
+  --shadow-premium-dark: 0 1px 3px rgba(0,0,0,0.3), 0 10px 40px -10px rgba(0,0,0,0.5);
+  
+  --animate-palette-in: palette-in 150ms ease-out;
+  --animate-palette-out: palette-out 150ms ease-in;
+}
+
+@keyframes palette-in {
+  from { opacity: 0; transform: scale(0.97) translateY(-8px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+@keyframes palette-out {
+  from { opacity: 1; transform: scale(1) translateY(0); }
+  to { opacity: 0; transform: scale(0.97) translateY(-8px); }
+}
+
+:root {
+  /* Light Theme */
+  --background: #FFFFFF;
+  --secondary-bg: #FAFAFA;
+  --card: #FFFFFF;
+  --border: #E4E4E7;
+  --primary-text: #18181B;
+  --secondary-text: #52525B;
+  --muted-text: #71717A;
+  --accent: #5E6AD2;
+  --success: #22C55E;
+  --warning: #F59E0B;
+  --danger: #EF4444;
+  --info: #3B82F6;
+  
+  --toastify-color-light: #ffffff;
+  --toastify-text-color-light: #18181b;
+}
+
+.dark {
+  /* Dark Theme */
+  --background: #09090B;
+  --secondary-bg: #111113;
+  --card: #18181B;
+  --border: rgba(255, 255, 255, 0.08);
+  --primary-text: #FAFAFA;
+  --secondary-text: #A1A1AA;
+  --muted-text: #71717A;
+  
+  --toastify-color-dark: #18181b;
+  --toastify-text-color-dark: #fafafa;
+}
+
 @layer base {
   body {
-    background-color: #F4F5F7; /* Jira-like light gray background */
-    color: #172B4D; /* Jira dark text */
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background-color: var(--background);
+    color: var(--primary-text);
+    font-family: var(--font-sans);
+    letter-spacing: -0.011em;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overflow-x: hidden;
   }
 }
 
-/* Custom styles for Jira-like look and feel */
-.jira-header {
-  background-color: #FFFFFF;
-  border-bottom: 1px solid #DFE1E6;
+/* Custom premium scrollbar inspired by Linear */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--secondary-bg);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 9999px;
+  transition: background 0.2s ease;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--muted-text);
 }
 
-.jira-sidebar {
-  background-color: #FAFBFC;
-  border-right: 1px solid #DFE1E6;
+/* Glassmorphism inspired elements */
+.glass-effect {
+  backdrop-filter: blur(12px) saturate(190%);
+  background-color: rgba(9, 9, 11, 0.7);
+}
+.light .glass-effect {
+  background-color: rgba(255, 255, 255, 0.7);
 }
 
-.btn-primary {
-  background-color: #0052CC;
-  color: white;
+/* Linear-style premium button presets */
+.linear-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   padding: 0.5rem 1rem;
-  border-radius: 3px;
+  font-size: 0.8125rem;
   font-weight: 500;
-  transition: background-color 0.15s ease;
+  border-radius: 6px;
+  background-color: var(--accent);
+  color: #FFFFFF;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  transition: all 150ms ease-in-out;
+}
+.linear-btn-primary:hover {
+  background-color: #6e7be2;
+  transform: translateY(-0.5px);
+}
+.linear-btn-primary:active {
+  transform: translateY(0);
 }
 
-.btn-primary:hover {
-  background-color: #0065FF;
-}
-
-.btn-secondary {
-  background-color: #F4F5F7;
-  color: #42526E;
+.linear-btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   padding: 0.5rem 1rem;
-  border-radius: 3px;
+  font-size: 0.8125rem;
   font-weight: 500;
-  border: 1px solid #DFE1E6;
+  border-radius: 6px;
+  background-color: var(--card);
+  color: var(--primary-text);
+  border: 1px solid var(--border);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+  transition: all 150ms ease-in-out;
+}
+.linear-btn-secondary:hover {
+  background-color: var(--secondary-bg);
+  border-color: var(--muted-text);
 }
 
-.btn-secondary:hover {
-  background-color: #EBECF0;
+/* Custom Toast customization to match styling */
+.Toastify__toast {
+  border-radius: 8px !important;
+  border: 1px solid var(--border) !important;
+  font-family: var(--font-sans) !important;
+  font-size: 0.8125rem !important;
+  box-shadow: var(--shadow-premium) !important;
 }
-
-/* Glassmorphism style cards in white theme if needed, otherwise clean borders */
-.jira-card {
-  background: #FFFFFF;
-  border: 1px solid #DFE1E6;
-  border-radius: 3px;
-  box-shadow: 0 1px 1px rgba(9, 30, 66, 0.25), 0 0 1px rgba(9, 30, 66, 0.31);
-}
-
-.jira-input {
-  border: 2px solid #DFE1E6;
-  background-color: #FAFBFC;
-  border-radius: 3px;
-  transition: background-color 0.2s, border-color 0.2s;
-}
-
-.jira-input:focus {
-  background-color: #FFFFFF;
-  border-color: #0052CC;
-  outline: none;
+.dark .Toastify__toast {
+  box-shadow: var(--shadow-premium-dark) !important;
 }

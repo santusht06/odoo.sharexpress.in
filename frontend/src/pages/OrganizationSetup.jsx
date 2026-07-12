@@ -1,10 +1,14 @@
 import React, { useEffect, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { fetchDepartments, createDepartment, updateDepartment } from "../store/slices/departmentSlice";
+import { fetchDepartments, createDepartment } from "../store/slices/departmentSlice";
 import { fetchCategories, createCategory } from "../store/slices/categorySlice";
 import { fetchEmployees, promoteEmployeeRole, assignEmployeeDepartment, toggleEmployeeStatus } from "../store/slices/employeeSlice";
 import { toast } from "react-toastify";
-import { Plus, Settings, Users, FolderTree, ShieldAlert } from "lucide-react";
+import { Plus, Settings, Users, FolderTree, ShieldAlert, Sparkles, PlusCircle } from "lucide-react";
+import Button from "../components/ui/Button";
+import Input from "../components/ui/Input";
+import StatusBadge from "../components/ui/StatusBadge";
+import { TableContainer, Table, Thead, Tbody, Tr, Th, Td, EmptyState } from "../components/ui/TableComponents";
 
 export default function OrganizationSetup() {
   const dispatch = useDispatch();
@@ -26,10 +30,14 @@ export default function OrganizationSetup() {
   const [fieldName, setFieldName] = useState("");
   const [fieldType, setFieldType] = useState("text");
 
-  useEffect(() => {
+  const refreshData = () => {
     dispatch(fetchDepartments());
     dispatch(fetchCategories());
     dispatch(fetchEmployees());
+  };
+
+  useEffect(() => {
+    refreshData();
   }, [dispatch]);
 
   const handleCreateDept = (e) => {
@@ -48,6 +56,7 @@ export default function OrganizationSetup() {
         setDeptDesc("");
         setDeptParent("");
         setDeptHead("");
+        refreshData();
       })
       .catch((err) => toast.error(err));
   };
@@ -66,6 +75,7 @@ export default function OrganizationSetup() {
         setCatName("");
         setCatDesc("");
         setCustomFields([]);
+        refreshData();
       })
       .catch((err) => toast.error(err));
   };
@@ -81,43 +91,45 @@ export default function OrganizationSetup() {
   };
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-xl font-bold text-slate-900 tracking-tight">Organization Master Setup</h2>
-        <p className="text-xs text-slate-500 font-semibold mt-1">Configure master departments, asset categories, and control user access policies</p>
+    <div className="space-y-6 text-text-primary">
+      <div className="flex justify-between items-center">
+        <div>
+          <h2 className="text-lg font-semibold tracking-tight">Organization Master Setup</h2>
+          <p className="text-xs text-text-muted mt-0.5 font-medium">Configure corporate structures, physical resource categories, and control user access profiles</p>
+        </div>
       </div>
 
-      {/* Tabs Headers */}
-      <div className="flex border-b border-slate-200">
+      {/* Tabs */}
+      <div className="flex border-b border-border-primary/80 text-xs">
         <button
           onClick={() => setActiveTab("departments")}
-          className={`px-4 py-2.5 text-xs font-bold uppercase tracking-wider border-b-2 transition-colors cursor-pointer ${
+          className={`px-4.5 py-3 border-b-2 font-medium tracking-tight transition-colors cursor-pointer ${
             activeTab === "departments"
-              ? "border-blue-600 text-blue-600"
-              : "border-transparent text-slate-500 hover:text-slate-700"
+              ? "border-accent-purple text-text-primary"
+              : "border-transparent text-text-muted hover:text-text-primary"
           }`}
         >
-          <FolderTree className="h-4 w-4 inline mr-2" /> Departments
+          <FolderTree className="h-3.5 w-3.5 inline mr-2 align-text-bottom" /> Departments Master
         </button>
         <button
           onClick={() => setActiveTab("categories")}
-          className={`px-4 py-2.5 text-xs font-bold uppercase tracking-wider border-b-2 transition-colors cursor-pointer ${
+          className={`px-4.5 py-3 border-b-2 font-medium tracking-tight transition-colors cursor-pointer ${
             activeTab === "categories"
-              ? "border-blue-600 text-blue-600"
-              : "border-transparent text-slate-500 hover:text-slate-700"
+              ? "border-accent-purple text-text-primary"
+              : "border-transparent text-text-muted hover:text-text-primary"
           }`}
         >
-          <Settings className="h-4 w-4 inline mr-2" /> Asset Categories
+          <Settings className="h-3.5 w-3.5 inline mr-2 align-text-bottom" /> Resource Categories
         </button>
         <button
           onClick={() => setActiveTab("employees")}
-          className={`px-4 py-2.5 text-xs font-bold uppercase tracking-wider border-b-2 transition-colors cursor-pointer ${
+          className={`px-4.5 py-3 border-b-2 font-medium tracking-tight transition-colors cursor-pointer ${
             activeTab === "employees"
-              ? "border-blue-600 text-blue-600"
-              : "border-transparent text-slate-500 hover:text-slate-700"
+              ? "border-accent-purple text-text-primary"
+              : "border-transparent text-text-muted hover:text-text-primary"
           }`}
         >
-          <Users className="h-4 w-4 inline mr-2" /> Employee Directory
+          <Users className="h-3.5 w-3.5 inline mr-2 align-text-bottom" /> Access Permissions
         </button>
       </div>
 
@@ -125,53 +137,47 @@ export default function OrganizationSetup() {
       {activeTab === "departments" && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Create Dept Form */}
-          <div className="jira-card p-6 h-fit">
-            <h3 className="text-xs font-bold text-slate-800 border-b border-slate-100 pb-3 uppercase tracking-wider">
+          <div className="bg-bg-card border border-border-primary rounded-xl p-5 shadow-sm space-y-4 h-fit">
+            <h3 className="text-xs font-semibold text-text-primary uppercase tracking-wider border-b border-border-primary/50 pb-3">
               Create Department
             </h3>
-            <form onSubmit={handleCreateDept} className="space-y-4 mt-4">
-              <div>
-                <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Department Name</label>
-                <input
-                  type="text"
-                  required
-                  value={deptName}
-                  onChange={(e) => setDeptName(e.target.value)}
-                  className="jira-input w-full px-3 py-2 text-xs text-slate-800"
-                  placeholder="e.g. Engineering"
-                />
-              </div>
+            <form onSubmit={handleCreateDept} className="space-y-4">
+              <Input
+                label="Department Name"
+                required
+                value={deptName}
+                onChange={(e) => setDeptName(e.target.value)}
+                placeholder="e.g. Engineering"
+              />
 
-              <div>
-                <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Description</label>
-                <textarea
-                  value={deptDesc}
-                  onChange={(e) => setDeptDesc(e.target.value)}
-                  className="jira-input w-full px-3 py-2 text-xs text-slate-800 h-20"
-                  placeholder="e.g. Software developments team"
-                />
-              </div>
+              <Input
+                label="Description"
+                type="textarea"
+                value={deptDesc}
+                onChange={(e) => setDeptDesc(e.target.value)}
+                placeholder="Describe team responsibilities..."
+              />
 
-              <div>
-                <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Parent Department</label>
+              <div className="space-y-1.5">
+                <label className="block text-[10px] font-semibold text-text-muted uppercase tracking-wider">Parent Department Scope</label>
                 <select
                   value={deptParent}
                   onChange={(e) => setDeptParent(e.target.value)}
-                  className="jira-input w-full px-3 py-2 text-xs text-slate-800"
+                  className="w-full bg-bg-secondary border border-border-primary text-xs text-text-primary rounded-lg px-3 py-2.5 focus:border-accent-purple/80 focus:outline-none focus:ring-2 focus:ring-accent-purple/20 transition-all cursor-pointer"
                 >
-                  <option value="">None (Top-Level)</option>
+                  <option value="">None (Top-Level Unit)</option>
                   {departments.map((d) => (
                     <option key={d.department_id} value={d.department_id}>{d.name}</option>
                   ))}
                 </select>
               </div>
 
-              <div>
-                <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Department Head</label>
+              <div className="space-y-1.5">
+                <label className="block text-[10px] font-semibold text-text-muted uppercase tracking-wider">Department Lead Specialist</label>
                 <select
                   value={deptHead}
                   onChange={(e) => setDeptHead(e.target.value)}
-                  className="jira-input w-full px-3 py-2 text-xs text-slate-800"
+                  className="w-full bg-bg-secondary border border-border-primary text-xs text-text-primary rounded-lg px-3 py-2.5 focus:border-accent-purple/80 focus:outline-none focus:ring-2 focus:ring-accent-purple/20 transition-all cursor-pointer"
                 >
                   <option value="">Unassigned</option>
                   {employees.map((e) => (
@@ -180,51 +186,45 @@ export default function OrganizationSetup() {
                 </select>
               </div>
 
-              <button type="submit" className="w-full btn-primary py-2 text-xs font-bold cursor-pointer">
+              <Button type="submit" variant="primary" className="w-full py-2.5">
                 Create Department
-              </button>
+              </Button>
             </form>
           </div>
 
           {/* List Depts */}
-          <div className="jira-card p-6 lg:col-span-2">
-            <h3 className="text-xs font-bold text-slate-800 border-b border-slate-100 pb-3 uppercase tracking-wider">
-              Departments List
-            </h3>
-            <div className="overflow-x-auto mt-4">
-              <table className="w-full text-left text-xs border-collapse">
-                <thead>
-                  <tr className="border-b border-slate-200 text-slate-500 font-bold bg-slate-50">
-                    <th className="py-2.5 px-3">Name</th>
-                    <th className="py-2.5 px-3">Description</th>
-                    <th className="py-2.5 px-3">Head</th>
-                    <th className="py-2.5 px-3">Status</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {departments.length === 0 ? (
-                    <tr>
-                      <td colSpan="4" className="py-4 text-center text-slate-400">No departments configured</td>
-                    </tr>
-                  ) : (
-                    departments.map((d) => (
-                      <tr key={d.department_id} className="hover:bg-slate-50">
-                        <td className="py-2.5 px-3 font-semibold text-slate-800">{d.name}</td>
-                        <td className="py-2.5 px-3 text-slate-500 truncate max-w-[200px]">{d.description}</td>
-                        <td className="py-2.5 px-3 font-medium text-slate-700">{d.head_name || "Unassigned"}</td>
-                        <td className="py-2.5 px-3">
-                          <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                            d.status === "Active" ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-slate-600"
-                          }`}>
-                            {d.status}
-                          </span>
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
+          <div className="lg:col-span-2 space-y-3">
+            <div className="flex items-center justify-between">
+              <h3 className="text-xs font-semibold text-text-primary uppercase tracking-wider">Corporate Departments</h3>
+              <span className="text-[10px] text-text-muted font-medium">Departments list</span>
             </div>
+            
+            <TableContainer>
+              {departments.length === 0 ? (
+                <EmptyState title="No departments configured" />
+              ) : (
+                <Table>
+                  <Thead>
+                    <Th>Name</Th>
+                    <Th>Description</Th>
+                    <Th>Lead Head</Th>
+                    <Th>Status</Th>
+                  </Thead>
+                  <Tbody>
+                    {departments.map((d) => (
+                      <Tr key={d.department_id}>
+                        <Td className="font-semibold text-text-primary">{d.name}</Td>
+                        <Td className="text-text-secondary truncate max-w-[200px]" title={d.description}>{d.description || "-"}</Td>
+                        <Td className="font-medium text-text-secondary">{d.head_name || "Unassigned"}</Td>
+                        <Td>
+                          <StatusBadge status={d.status} />
+                        </Td>
+                      </Tr>
+                    ))}
+                  </Tbody>
+                </Table>
+              )}
+            </TableContainer>
           </div>
         </div>
       )}
@@ -232,70 +232,66 @@ export default function OrganizationSetup() {
       {/* Tab B: Asset Categories */}
       {activeTab === "categories" && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="jira-card p-6 h-fit">
-            <h3 className="text-xs font-bold text-slate-800 border-b border-slate-100 pb-3 uppercase tracking-wider">
-              Create Asset Category
+          <div className="bg-bg-card border border-border-primary rounded-xl p-5 shadow-sm space-y-4 h-fit">
+            <h3 className="text-xs font-semibold text-text-primary uppercase tracking-wider border-b border-border-primary/50 pb-3">
+              Create Category
             </h3>
-            <form onSubmit={handleCreateCategory} className="space-y-4 mt-4">
-              <div>
-                <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Category Name</label>
-                <input
-                  type="text"
-                  required
-                  value={catName}
-                  onChange={(e) => setCatName(e.target.value)}
-                  className="jira-input w-full px-3 py-2 text-xs text-slate-800"
-                  placeholder="e.g. Laptops"
-                />
-              </div>
+            <form onSubmit={handleCreateCategory} className="space-y-4">
+              <Input
+                label="Category Name"
+                required
+                value={catName}
+                onChange={(e) => setCatName(e.target.value)}
+                placeholder="e.g. Laptops"
+              />
 
-              <div>
-                <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Description</label>
-                <textarea
-                  value={catDesc}
-                  onChange={(e) => setCatDesc(e.target.value)}
-                  className="jira-input w-full px-3 py-2 text-xs text-slate-800 h-20"
-                  placeholder="e.g. Enterprise computers"
-                />
-              </div>
+              <Input
+                label="Description"
+                type="textarea"
+                value={catDesc}
+                onChange={(e) => setCatDesc(e.target.value)}
+                placeholder="e.g. Corporate employee laptops..."
+              />
 
               {/* Custom fields definitions */}
-              <div className="border border-slate-200 rounded p-3 bg-slate-50/50">
-                <label className="block text-[10px] font-bold text-slate-600 uppercase mb-2">Category Specific Fields</label>
+              <div className="border border-border-primary rounded-xl p-3 bg-bg-secondary/40 space-y-3">
+                <label className="block text-[9px] font-semibold text-text-muted uppercase tracking-wider">Dynamic Specification Fields</label>
                 <div className="flex gap-2">
                   <input
                     type="text"
                     value={fieldName}
                     onChange={(e) => setFieldName(e.target.value)}
-                    className="jira-input flex-1 px-2 py-1 text-xs"
+                    className="flex-1 bg-bg-card border border-border-primary text-xs text-text-primary rounded-lg px-2 py-1 placeholder-text-muted focus:border-accent-purple/80 focus:outline-none"
                     placeholder="Field Name (e.g. RAM)"
                   />
                   <select
                     value={fieldType}
                     onChange={(e) => setFieldType(e.target.value)}
-                    className="jira-input px-2 py-1 text-xs"
+                    className="bg-bg-card border border-border-primary text-xs text-text-primary rounded-lg px-1.5 py-1 focus:border-accent-purple/80 focus:outline-none cursor-pointer"
                   >
                     <option value="text">Text</option>
                     <option value="number">Number</option>
                     <option value="date">Date</option>
                   </select>
-                  <button
+                  <Button
                     type="button"
+                    variant="secondary"
+                    size="sm"
                     onClick={addCustomField}
-                    className="px-2 py-1 bg-slate-800 text-white rounded text-xs hover:bg-slate-700 cursor-pointer"
+                    className="px-3"
                   >
                     Add
-                  </button>
+                  </Button>
                 </div>
 
-                <div className="mt-3 space-y-1.5">
+                <div className="space-y-1.5">
                   {customFields.map((field, idx) => (
-                    <div key={idx} className="flex items-center justify-between bg-white border border-slate-200 px-2.5 py-1 rounded text-xs">
-                      <span className="font-semibold text-slate-700">{field.field_name} ({field.field_type})</span>
+                    <div key={idx} className="flex items-center justify-between bg-bg-card border border-border-primary px-2.5 py-1 rounded-lg text-xs">
+                      <span className="font-semibold text-text-primary">{field.field_name} ({field.field_type})</span>
                       <button
                         type="button"
                         onClick={() => removeCustomField(idx)}
-                        className="text-red-500 font-bold hover:underline"
+                        className="text-status-danger font-bold hover:underline text-[10px]"
                       >
                         Remove
                       </button>
@@ -304,120 +300,124 @@ export default function OrganizationSetup() {
                 </div>
               </div>
 
-              <button type="submit" className="w-full btn-primary py-2 text-xs font-bold cursor-pointer">
+              <Button type="submit" variant="primary" className="w-full py-2.5">
                 Create Category
-              </button>
+              </Button>
             </form>
           </div>
 
-          <div className="jira-card p-6 lg:col-span-2">
-            <h3 className="text-xs font-bold text-slate-800 border-b border-slate-100 pb-3 uppercase tracking-wider">
-              Asset Categories List
-            </h3>
-            <div className="overflow-x-auto mt-4">
-              <table className="w-full text-left text-xs border-collapse">
-                <thead>
-                  <tr className="border-b border-slate-200 text-slate-500 font-bold bg-slate-50">
-                    <th className="py-2.5 px-3">Name</th>
-                    <th className="py-2.5 px-3">Description</th>
-                    <th className="py-2.5 px-3">Custom Fields Count</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {categories.length === 0 ? (
-                    <tr>
-                      <td colSpan="3" className="py-4 text-center text-slate-400">No categories configured</td>
-                    </tr>
-                  ) : (
-                    categories.map((c) => (
-                      <tr key={c.category_id} className="hover:bg-slate-50">
-                        <td className="py-2.5 px-3 font-semibold text-slate-800">{c.name}</td>
-                        <td className="py-2.5 px-3 text-slate-500">{c.description}</td>
-                        <td className="py-2.5 px-3 font-bold text-slate-600">
-                          {c.custom_fields?.length || 0} fields
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
+          <div className="lg:col-span-2 space-y-3">
+            <div className="flex items-center justify-between">
+              <h3 className="text-xs font-semibold text-text-primary uppercase tracking-wider">Asset Categories</h3>
+              <span className="text-[10px] text-text-muted font-medium">Categories list</span>
             </div>
+
+            <TableContainer>
+              {categories.length === 0 ? (
+                <EmptyState title="No categories configured" />
+              ) : (
+                <Table>
+                  <Thead>
+                    <Th>Name</Th>
+                    <Th>Description</Th>
+                    <Th>Custom Fields Count</Th>
+                  </Thead>
+                  <Tbody>
+                    {categories.map((c) => (
+                      <Tr key={c.category_id}>
+                        <Td className="font-semibold text-text-primary">{c.name}</Td>
+                        <Td className="text-text-secondary">{c.description || "-"}</Td>
+                        <Td className="font-bold text-accent-purple">
+                          {c.custom_fields?.length || 0} fields
+                        </Td>
+                      </Tr>
+                    ))}
+                  </Tbody>
+                </Table>
+              )}
+            </TableContainer>
           </div>
         </div>
       )}
 
       {/* Tab C: Employee Directory */}
       {activeTab === "employees" && (
-        <div className="jira-card p-6">
-          <h3 className="text-xs font-bold text-slate-800 border-b border-slate-100 pb-3 uppercase tracking-wider mb-4">
-            Employee Directory & Access Policy
-          </h3>
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs border-collapse">
-              <thead>
-                <tr className="border-b border-slate-200 text-slate-500 font-bold bg-slate-50">
-                  <th className="py-2.5 px-3">Name</th>
-                  <th className="py-2.5 px-3">Email</th>
-                  <th className="py-2.5 px-3">Department</th>
-                  <th className="py-2.5 px-3">Current Role</th>
-                  <th className="py-2.5 px-3 text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <h3 className="text-xs font-semibold text-text-primary uppercase tracking-wider">Staff Role Routing & Access Control</h3>
+            <span className="text-[10px] text-text-muted font-medium">Assign roles and units</span>
+          </div>
+
+          <TableContainer>
+            <Table>
+              <Thead>
+                <Th>Name</Th>
+                <Th>Email Address</Th>
+                <Th>Unit / Department</Th>
+                <Th>Privilege Role</Th>
+                <Th className="text-right">Access Action</Th>
+              </Thead>
+              <Tbody>
                 {employees.map((emp) => (
-                  <tr key={emp.user_id} className="hover:bg-slate-50">
-                    <td className="py-2.5 px-3 font-semibold text-slate-800">{emp.name}</td>
-                    <td className="py-2.5 px-3 text-slate-500">{emp.email}</td>
-                    <td className="py-2.5 px-3">
+                  <Tr key={emp.user_id}>
+                    <Td className="font-semibold text-text-primary">
+                      <div className="flex items-center gap-3">
+                        <div className="h-7 w-7 rounded-full bg-accent-purple/10 text-accent-purple text-xs font-semibold flex items-center justify-center border border-accent-purple/20 select-none">
+                          {emp.name?.charAt(0).toUpperCase()}
+                        </div>
+                        <span className="font-medium">{emp.name}</span>
+                      </div>
+                    </Td>
+                    <Td className="font-medium text-text-secondary">{emp.email}</Td>
+                    <Td>
                       <select
                         value={emp.department_id || ""}
                         onChange={(e) => {
                           dispatch(assignEmployeeDepartment({ employeeId: emp.user_id, departmentId: e.target.value }))
-                            .then(() => toast.success("Department updated successfully"));
+                            .then(() => toast.success("Department assigned successfully"));
                         }}
-                        className="jira-input px-2 py-1 text-xs"
+                        className="bg-bg-secondary border border-border-primary text-xs text-text-primary rounded-lg px-2.5 py-1.5 focus:border-accent-purple/80 focus:outline-none cursor-pointer"
                       >
                         <option value="">Unassigned</option>
                         {departments.map((d) => (
                           <option key={d.department_id} value={d.department_id}>{d.name}</option>
                         ))}
                       </select>
-                    </td>
-                    <td className="py-2.5 px-3">
+                    </Td>
+                    <Td>
                       <select
                         value={emp.role}
                         onChange={(e) => {
                           dispatch(promoteEmployeeRole({ employeeId: emp.user_id, role: e.target.value }))
-                            .then(() => toast.success("Access role updated successfully"));
+                            .then(() => toast.success("Access privileges updated successfully"));
                         }}
-                        className="jira-input px-2 py-1 text-xs font-bold"
+                        className="bg-bg-secondary border border-border-primary text-xs text-text-primary rounded-lg px-2.5 py-1.5 font-bold focus:border-accent-purple/80 focus:outline-none cursor-pointer"
                       >
                         <option value="ADMIN">ADMIN</option>
                         <option value="ASSET_MANAGER">ASSET_MANAGER</option>
                         <option value="DEPARTMENT_HEAD">DEPARTMENT_HEAD</option>
                         <option value="EMPLOYEE">EMPLOYEE</option>
                       </select>
-                    </td>
-                    <td className="py-2.5 px-3 text-right">
-                      <button
-                        onClick={() => {
-                          dispatch(toggleEmployeeStatus(emp.user_id))
-                            .then(() => toast.success("Employee status toggled"));
-                        }}
-                        className={`px-3 py-1 rounded text-xs font-semibold cursor-pointer ${
-                          emp.is_active 
-                            ? "bg-slate-100 text-slate-600 hover:bg-slate-200" 
-                            : "bg-red-50 text-red-600 hover:bg-red-100"
-                        }`}
-                      >
-                        {emp.is_active ? "Deactivate" : "Activate"}
-                      </button>
-                    </td>
-                  </tr>
+                    </Td>
+                    <Td className="text-right">
+                      {emp.user_id !== user.user_id && (
+                        <Button
+                          variant={emp.is_active ? "secondary" : "primary"}
+                          size="sm"
+                          onClick={() => {
+                            dispatch(toggleEmployeeStatus(emp.user_id))
+                              .then(() => toast.success("Access status toggled"));
+                          }}
+                        >
+                          {emp.is_active ? "Suspend" : "Activate"}
+                        </Button>
+                      )}
+                    </Td>
+                  </Tr>
                 ))}
-              </tbody>
-            </table>
-          </div>
+              </Tbody>
+            </Table>
+          </TableContainer>
         </div>
       )}
     </div>

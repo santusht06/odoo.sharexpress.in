@@ -5,7 +5,12 @@ import { fetchTransfers, requestTransfer, approveTransfer, rejectTransfer } from
 import { fetchAssets } from "../store/slices/assetSlice";
 import { fetchEmployees } from "../store/slices/employeeSlice";
 import { toast } from "react-toastify";
-import { Plus, RefreshCw, Calendar, Check, X } from "lucide-react";
+import { Plus, RefreshCw, Calendar, Check, X, ArrowLeftRight } from "lucide-react";
+import Button from "../components/ui/Button";
+import Input from "../components/ui/Input";
+import Drawer from "../components/ui/Drawer";
+import StatusBadge from "../components/ui/StatusBadge";
+import { TableContainer, Table, Thead, Tbody, Tr, Th, Td, EmptyState } from "../components/ui/TableComponents";
 
 export default function Allocations() {
   const dispatch = useDispatch();
@@ -17,7 +22,11 @@ export default function Allocations() {
   const { items: employees } = useSelector((state) => state.employees);
   const { user } = useSelector((state) => state.auth);
 
-  // Forms
+  // Drawer toggles
+  const [showAllocForm, setShowAllocForm] = useState(false);
+  const [showTransferForm, setShowTransferForm] = useState(false);
+
+  // Forms states
   const [allocAssetId, setAllocAssetId] = useState("");
   const [allocToUser, setAllocToUser] = useState("");
   const [expectedReturn, setExpectedReturn] = useState("");
@@ -31,11 +40,15 @@ export default function Allocations() {
   const [transferToUser, setTransferToUser] = useState("");
   const [transferNotes, setTransferNotes] = useState("");
 
-  useEffect(() => {
+  const refreshData = () => {
     dispatch(fetchAllocations());
     dispatch(fetchTransfers());
     dispatch(fetchAssets({ status: "Available" }));
     dispatch(fetchEmployees());
+  };
+
+  useEffect(() => {
+    refreshData();
   }, [dispatch]);
 
   const handleAllocate = (e) => {
@@ -50,11 +63,12 @@ export default function Allocations() {
     })).unwrap()
       .then(() => {
         toast.success("Asset allocated successfully!");
+        setShowAllocForm(false);
         setAllocAssetId("");
         setAllocToUser("");
         setExpectedReturn("");
         setAllocNotes("");
-        dispatch(fetchAssets({ status: "Available" }));
+        refreshData();
       })
       .catch((err) => toast.error(err));
   };
@@ -75,7 +89,7 @@ export default function Allocations() {
         setReturnAllocId(null);
         setReturnCondition("Good");
         setReturnNotes("");
-        dispatch(fetchAssets({ status: "Available" }));
+        refreshData();
       })
       .catch((err) => toast.error(err));
   };
@@ -91,9 +105,11 @@ export default function Allocations() {
     })).unwrap()
       .then(() => {
         toast.success("Transfer request submitted!");
+        setShowTransferForm(false);
         setTransferAssetId("");
         setTransferToUser("");
         setTransferNotes("");
+        refreshData();
       })
       .catch((err) => toast.error(err));
   };
@@ -101,346 +117,354 @@ export default function Allocations() {
   const handleApproveTransfer = (transferId) => {
     dispatch(approveTransfer({ transferId, notes: "Approved transfer." }))
       .unwrap()
-      .then(() => toast.success("Transfer approved successfully!"))
+      .then(() => {
+        toast.success("Transfer approved successfully!");
+        refreshData();
+      })
       .catch((err) => toast.error(err));
   };
 
   const handleRejectTransfer = (transferId) => {
     dispatch(rejectTransfer({ transferId, notes: "Rejected transfer." }))
       .unwrap()
-      .then(() => toast.success("Transfer rejected"))
+      .then(() => {
+        toast.success("Transfer rejected");
+        refreshData();
+      })
       .catch((err) => toast.error(err));
   };
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-xl font-bold text-slate-900 tracking-tight">Allocations & Transfers</h2>
-        <p className="text-xs text-slate-500 font-semibold mt-1">Assign resources to employees or workflow asset re-allocations</p>
+    <div className="space-y-6 text-text-primary">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-lg font-semibold tracking-tight">Handovers & Transfers</h2>
+          <p className="text-xs text-text-muted mt-0.5 font-medium">Manage team hardware assignments and department relocations</p>
+        </div>
+        <div className="flex gap-2">
+          {activeTab === "allocations" ? (
+            ["ADMIN", "ASSET_MANAGER"].includes(user?.role) && (
+              <Button
+                onClick={() => setShowAllocForm(true)}
+                variant="primary"
+                size="sm"
+                className="flex items-center gap-1.5"
+              >
+                <Plus className="h-4 w-4" /> Allocate Asset
+              </Button>
+            )
+          ) : (
+            <Button
+              onClick={() => setShowTransferForm(true)}
+              variant="primary"
+              size="sm"
+              className="flex items-center gap-1.5"
+            >
+              <ArrowLeftRight className="h-3.5 w-3.5" /> Request Transfer
+            </Button>
+          )}
+        </div>
       </div>
 
-      <div className="flex border-b border-slate-200">
+      {/* Tabs */}
+      <div className="flex border-b border-border-primary/80 text-xs">
         <button
           onClick={() => setActiveTab("allocations")}
-          className={`px-4 py-2.5 text-xs font-bold uppercase tracking-wider border-b-2 transition-colors cursor-pointer ${
+          className={`px-4.5 py-3 border-b-2 font-medium tracking-tight transition-colors cursor-pointer ${
             activeTab === "allocations"
-              ? "border-blue-600 text-blue-600"
-              : "border-transparent text-slate-500 hover:text-slate-700"
+              ? "border-accent-purple text-text-primary"
+              : "border-transparent text-text-muted hover:text-text-primary"
           }`}
         >
-          <Calendar className="h-4 w-4 inline mr-2" /> Allocations
+          <Calendar className="h-3.5 w-3.5 inline mr-2 align-text-bottom" /> Active Assignments
         </button>
         <button
           onClick={() => setActiveTab("transfers")}
-          className={`px-4 py-2.5 text-xs font-bold uppercase tracking-wider border-b-2 transition-colors cursor-pointer ${
+          className={`px-4.5 py-3 border-b-2 font-medium tracking-tight transition-colors cursor-pointer ${
             activeTab === "transfers"
-              ? "border-blue-600 text-blue-600"
-              : "border-transparent text-slate-500 hover:text-slate-700"
+              ? "border-accent-purple text-text-primary"
+              : "border-transparent text-text-muted hover:text-text-primary"
           }`}
         >
-          <RefreshCw className="h-4 w-4 inline mr-2" /> Transfers Workflow
+          <RefreshCw className="h-3.5 w-3.5 inline mr-2 align-text-bottom" /> Relocation Transfers
         </button>
       </div>
 
+      {/* Allocations View */}
       {activeTab === "allocations" && (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Alloc Form */}
-          {["ADMIN", "ASSET_MANAGER"].includes(user?.role) && (
-            <div className="jira-card p-6 h-fit bg-white">
-              <h3 className="text-xs font-bold text-slate-800 border-b border-slate-100 pb-3 uppercase tracking-wider mb-4">
-                Allocate Asset
-              </h3>
-              <form onSubmit={handleAllocate} className="space-y-4">
-                <div>
-                  <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Select Available Asset *</label>
-                  <select
-                    required
-                    value={allocAssetId}
-                    onChange={(e) => setAllocAssetId(e.target.value)}
-                    className="jira-input w-full px-3 py-2 text-xs text-slate-800"
-                  >
-                    <option value="">Select Asset</option>
-                    {assets.map((a) => (
-                      <option key={a.asset_id} value={a.asset_id}>{a.name} ({a.asset_tag})</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Allocate To Employee *</label>
-                  <select
-                    required
-                    value={allocToUser}
-                    onChange={(e) => setAllocToUser(e.target.value)}
-                    className="jira-input w-full px-3 py-2 text-xs text-slate-800"
-                  >
-                    <option value="">Select Employee</option>
-                    {employees.map((e) => (
-                      <option key={e.user_id} value={e.user_id}>{e.name} ({e.email})</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Expected Return Date</label>
-                  <input
-                    type="date"
-                    value={expectedReturn}
-                    onChange={(e) => setExpectedReturn(e.target.value)}
-                    className="jira-input w-full px-3 py-2 text-xs text-slate-800"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Notes</label>
-                  <textarea
-                    value={allocNotes}
-                    onChange={(e) => setAllocNotes(e.target.value)}
-                    className="jira-input w-full px-3 py-2 text-xs text-slate-800 h-16"
-                  />
-                </div>
-
-                <button type="submit" className="w-full btn-primary py-2 text-xs font-bold cursor-pointer">
-                  Allocate Asset
-                </button>
-              </form>
-            </div>
+        <TableContainer>
+          {allocations.length === 0 ? (
+            <EmptyState 
+              title="No active assignments" 
+              description="No company assets are currently checked out to employees."
+              primaryActionLabel={["ADMIN", "ASSET_MANAGER"].includes(user?.role) ? "Allocate Asset" : null}
+              onPrimaryAction={["ADMIN", "ASSET_MANAGER"].includes(user?.role) ? () => setShowAllocForm(true) : null}
+            />
+          ) : (
+            <Table>
+              <Thead>
+                <Th>Asset</Th>
+                <Th>Tag</Th>
+                <Th>Holder</Th>
+                <Th>Expected Return</Th>
+                <Th>Status</Th>
+                <Th className="text-right">Actions</Th>
+              </Thead>
+              <Tbody>
+                {allocations.map((a) => (
+                  <Tr key={a.allocation_id}>
+                    <Td className="font-semibold text-text-primary">{a.asset_name}</Td>
+                    <Td className="font-bold text-accent-purple">{a.asset_tag}</Td>
+                    <Td className="font-medium text-text-secondary">{a.allocated_to_name}</Td>
+                    <Td className="text-text-muted">
+                      {a.expected_return_date ? new Date(a.expected_return_date).toLocaleDateString() : "Permanent"}
+                    </Td>
+                    <Td>
+                      <StatusBadge status={a.status} />
+                    </Td>
+                    <Td className="text-right">
+                      {["ADMIN", "ASSET_MANAGER"].includes(user?.role) && (a.status === "Active" || a.status === "Overdue") && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setReturnAllocId(a.allocation_id)}
+                          className="text-accent-purple"
+                        >
+                          Check In
+                        </Button>
+                      )}
+                    </Td>
+                  </Tr>
+                ))}
+              </Tbody>
+            </Table>
           )}
-
-          {/* List Allocations */}
-          <div className="jira-card p-6 lg:col-span-2 bg-white">
-            <h3 className="text-xs font-bold text-slate-800 border-b border-slate-100 pb-3 uppercase tracking-wider mb-4">
-              Active & Overdue Assignments
-            </h3>
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs border-collapse">
-                <thead>
-                  <tr className="border-b border-slate-200 text-slate-500 font-bold bg-slate-50">
-                    <th className="py-2.5 px-3">Asset</th>
-                    <th className="py-2.5 px-3">Tag</th>
-                    <th className="py-2.5 px-3">Holder</th>
-                    <th className="py-2.5 px-3">Expected Return</th>
-                    <th className="py-2.5 px-3">Status</th>
-                    <th className="py-2.5 px-3 text-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {allocations.length === 0 ? (
-                    <tr>
-                      <td colSpan="6" className="py-4 text-center text-slate-400">No active assignments</td>
-                    </tr>
-                  ) : (
-                    allocations.map((a) => (
-                      <tr key={a.allocation_id} className="hover:bg-slate-50">
-                        <td className="py-2.5 px-3 font-semibold text-slate-800">{a.asset_name}</td>
-                        <td className="py-2.5 px-3 font-bold text-blue-600">{a.asset_tag}</td>
-                        <td className="py-2.5 px-3 text-slate-600">{a.allocated_to_name}</td>
-                        <td className="py-2.5 px-3 text-slate-500">
-                          {a.expected_return_date ? new Date(a.expected_return_date).toLocaleDateString() : "Permanent"}
-                        </td>
-                        <td className="py-2.5 px-3">
-                          <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                            a.status === "Overdue" ? "bg-red-50 text-red-700" : "bg-blue-50 text-blue-700"
-                          }`}>
-                            {a.status}
-                          </span>
-                        </td>
-                        <td className="py-2.5 px-3 text-right">
-                          {["ADMIN", "ASSET_MANAGER"].includes(user?.role) && (a.status === "Active" || a.status === "Overdue") && (
-                            <button
-                              onClick={() => setReturnAllocId(a.allocation_id)}
-                              className="text-xs text-blue-600 font-bold hover:underline cursor-pointer"
-                            >
-                              Process Return
-                            </button>
-                          )}
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
+        </TableContainer>
       )}
 
-      {/* Tab B: Transfers Workflow */}
+      {/* Transfers View */}
       {activeTab === "transfers" && (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="jira-card p-6 h-fit bg-white">
-            <h3 className="text-xs font-bold text-slate-800 border-b border-slate-100 pb-3 uppercase tracking-wider mb-4">
-              Request Asset Transfer
-            </h3>
-            <form onSubmit={handleRequestTransfer} className="space-y-4">
-              <div>
-                <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Select Assigned Asset *</label>
-                <select
-                  required
-                  value={transferAssetId}
-                  onChange={(e) => setTransferAssetId(e.target.value)}
-                  className="jira-input w-full px-3 py-2 text-xs text-slate-800"
-                >
-                  <option value="">Select Asset</option>
-                  {allocations.filter(a => a.status === "Active" || a.status === "Overdue").map((a) => (
-                    <option key={a.asset_id} value={a.asset_id}>{a.asset_name} ({a.asset_tag})</option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Transfer to Employee *</label>
-                <select
-                  required
-                  value={transferToUser}
-                  onChange={(e) => setTransferToUser(e.target.value)}
-                  className="jira-input w-full px-3 py-2 text-xs text-slate-800"
-                >
-                  <option value="">Select Recipient</option>
-                  {employees.map((e) => (
-                    <option key={e.user_id} value={e.user_id}>{e.name} ({e.email})</option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Transfer Justification Notes</label>
-                <textarea
-                  value={transferNotes}
-                  onChange={(e) => setTransferNotes(e.target.value)}
-                  className="jira-input w-full px-3 py-2 text-xs text-slate-800 h-20"
-                />
-              </div>
-
-              <button type="submit" className="w-full btn-primary py-2 text-xs font-bold cursor-pointer">
-                Submit Request
-              </button>
-            </form>
-          </div>
-
-          <div className="jira-card p-6 lg:col-span-2 bg-white">
-            <h3 className="text-xs font-bold text-slate-800 border-b border-slate-100 pb-3 uppercase tracking-wider mb-4">
-              Pending & Completed Transfers
-            </h3>
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs border-collapse">
-                <thead>
-                  <tr className="border-b border-slate-200 text-slate-500 font-bold bg-slate-50">
-                    <th className="py-2.5 px-3">Asset</th>
-                    <th className="py-2.5 px-3">Tag</th>
-                    <th className="py-2.5 px-3">From</th>
-                    <th className="py-2.5 px-3">To</th>
-                    <th className="py-2.5 px-3">Status</th>
-                    <th className="py-2.5 px-3 text-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {transfers.length === 0 ? (
-                    <tr>
-                      <td colSpan="6" className="py-4 text-center text-slate-400">No transfer requests filed</td>
-                    </tr>
-                  ) : (
-                    transfers.map((t) => (
-                      <tr key={t.transfer_id} className="hover:bg-slate-50">
-                        <td className="py-2.5 px-3 font-semibold text-slate-800">{t.asset_name}</td>
-                        <td className="py-2.5 px-3 font-bold text-blue-600">{t.asset_tag}</td>
-                        <td className="py-2.5 px-3 text-slate-500">{t.from_user_name}</td>
-                        <td className="py-2.5 px-3 text-slate-700 font-semibold">{t.to_user_name}</td>
-                        <td className="py-2.5 px-3">
-                          <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                            t.status === "Approved"
-                              ? "bg-emerald-50 text-emerald-700"
-                              : t.status === "Requested"
-                              ? "bg-blue-50 text-blue-700"
-                              : "bg-rose-50 text-rose-700"
-                          }`}>
-                            {t.status}
-                          </span>
-                        </td>
-                        <td className="py-2.5 px-3 text-right flex justify-end gap-1.5">
-                          {["ADMIN", "ASSET_MANAGER", "DEPARTMENT_HEAD"].includes(user?.role) && t.status === "Requested" && (
-                            <>
-                              <button
-                                onClick={() => handleApproveTransfer(t.transfer_id)}
-                                className="p-1 text-emerald-600 hover:bg-emerald-50 rounded cursor-pointer"
-                                title="Approve"
-                              >
-                                <Check className="h-4 w-4" />
-                              </button>
-                              <button
-                                onClick={() => handleRejectTransfer(t.transfer_id)}
-                                className="p-1 text-rose-600 hover:bg-rose-50 rounded cursor-pointer"
-                                title="Reject"
-                              >
-                                <X className="h-4 w-4" />
-                              </button>
-                            </>
-                          )}
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
+        <TableContainer>
+          {transfers.length === 0 ? (
+            <EmptyState 
+              title="No transfer requests" 
+              description="Inventory items have not been routed for staff relocation transfers."
+              primaryActionLabel="Request Transfer"
+              onPrimaryAction={() => setShowTransferForm(true)}
+            />
+          ) : (
+            <Table>
+              <Thead>
+                <Th>Asset</Th>
+                <Th>Tag</Th>
+                <Th>From Holder</Th>
+                <Th>To Recipient</Th>
+                <Th>Status</Th>
+                <Th className="text-right">Actions</Th>
+              </Thead>
+              <Tbody>
+                {transfers.map((t) => (
+                  <Tr key={t.transfer_id}>
+                    <Td className="font-semibold text-text-primary">{t.asset_name}</Td>
+                    <Td className="font-bold text-accent-purple">{t.asset_tag}</Td>
+                    <Td className="text-text-secondary">{t.from_user_name}</Td>
+                    <Td className="font-medium text-text-primary">{t.to_user_name}</Td>
+                    <Td>
+                      <StatusBadge status={t.status} />
+                    </Td>
+                    <Td className="text-right">
+                      {["ADMIN", "ASSET_MANAGER", "DEPARTMENT_HEAD"].includes(user?.role) && t.status === "Requested" && (
+                        <div className="flex justify-end gap-1.5">
+                          <button
+                            onClick={() => handleApproveTransfer(t.transfer_id)}
+                            className="p-1 hover:bg-status-success/10 text-status-success rounded-md border border-transparent hover:border-status-success/20 transition-all cursor-pointer"
+                            title="Approve"
+                          >
+                            <Check className="h-4 w-4" />
+                          </button>
+                          <button
+                            onClick={() => handleRejectTransfer(t.transfer_id)}
+                            className="p-1 hover:bg-status-danger/10 text-status-danger rounded-md border border-transparent hover:border-status-danger/20 transition-all cursor-pointer"
+                            title="Reject"
+                          >
+                            <X className="h-4 w-4" />
+                          </button>
+                        </div>
+                      )}
+                    </Td>
+                  </Tr>
+                ))}
+              </Tbody>
+            </Table>
+          )}
+        </TableContainer>
       )}
 
-      {/* Return Asset Dialog Modal */}
-      {returnAllocId && (
-        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 z-50">
-          <div className="bg-white border border-slate-200 shadow-xl rounded max-w-md w-full p-6 relative">
-            <button
-              onClick={() => setReturnAllocId(null)}
-              className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 font-bold"
+      {/* Allocate Drawer */}
+      <Drawer
+        isOpen={showAllocForm}
+        onClose={() => setShowAllocForm(false)}
+        title="Allocate Company Asset"
+        subtitle="Handover central store resource to staff member"
+        size="sm"
+      >
+        <form onSubmit={handleAllocate} className="space-y-4">
+          <div className="space-y-1.5">
+            <label className="block text-[10px] font-semibold text-text-muted uppercase tracking-wider">Select Available Asset *</label>
+            <select
+              required
+              value={allocAssetId}
+              onChange={(e) => setAllocAssetId(e.target.value)}
+              className="w-full bg-bg-secondary border border-border-primary text-xs text-text-primary rounded-lg px-3 py-2.5 focus:border-accent-purple/80 focus:outline-none focus:ring-2 focus:ring-accent-purple/20 transition-all cursor-pointer"
             >
-              ✕
-            </button>
-            <h3 className="text-sm font-bold text-slate-800 border-b border-slate-100 pb-3 uppercase tracking-wider mb-4">
-              Process Asset Check-In
-            </h3>
-            <form onSubmit={handleReturnSubmit} className="space-y-4">
-              <div>
-                <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Return Condition</label>
-                <select
-                  value={returnCondition}
-                  onChange={(e) => setReturnCondition(e.target.value)}
-                  className="jira-input w-full px-3 py-2 text-xs text-slate-800"
-                >
-                  <option value="Good">Good (Ready to Re-allocate)</option>
-                  <option value="Fair">Fair (Minor signs of wear)</option>
-                  <option value="Poor">Poor (Needs repair inspection)</option>
-                  <option value="Damaged">Damaged (Broken / Out of Service)</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Check-in Notes</label>
-                <textarea
-                  value={returnNotes}
-                  onChange={(e) => setReturnNotes(e.target.value)}
-                  className="jira-input w-full px-3 py-2 text-xs text-slate-800 h-20"
-                  placeholder="Details about components returned (charger, bag, etc.)"
-                />
-              </div>
-
-              <div className="flex justify-end gap-2 mt-4">
-                <button
-                  type="button"
-                  onClick={() => setReturnAllocId(null)}
-                  className="btn-secondary py-2 text-xs font-bold cursor-pointer"
-                >
-                  Cancel
-                </button>
-                <button type="submit" className="btn-primary py-2 text-xs font-bold cursor-pointer">
-                  Complete Return
-                </button>
-              </div>
-            </form>
+              <option value="">Select Asset</option>
+              {assets.map((a) => (
+                <option key={a.asset_id} value={a.asset_id}>{a.name} ({a.asset_tag})</option>
+              ))}
+            </select>
           </div>
-        </div>
-      )}
+
+          <div className="space-y-1.5">
+            <label className="block text-[10px] font-semibold text-text-muted uppercase tracking-wider">Allocate To Employee *</label>
+            <select
+              required
+              value={allocToUser}
+              onChange={(e) => setAllocToUser(e.target.value)}
+              className="w-full bg-bg-secondary border border-border-primary text-xs text-text-primary rounded-lg px-3 py-2.5 focus:border-accent-purple/80 focus:outline-none focus:ring-2 focus:ring-accent-purple/20 transition-all cursor-pointer"
+            >
+              <option value="">Select Employee</option>
+              {employees.map((e) => (
+                <option key={e.user_id} value={e.user_id}>{e.name} ({e.email})</option>
+              ))}
+            </select>
+          </div>
+
+          <Input
+            label="Expected Return Date"
+            type="date"
+            value={expectedReturn}
+            onChange={(e) => setExpectedReturn(e.target.value)}
+            description="Leave blank for permanent assignments"
+          />
+
+          <Input
+            label="Allocation Justification"
+            type="textarea"
+            value={allocNotes}
+            onChange={(e) => setAllocNotes(e.target.value)}
+            placeholder="Reason for allocation, project details, etc."
+          />
+
+          <div className="flex justify-end gap-2 pt-4 border-t border-border-primary">
+            <Button variant="secondary" onClick={() => setShowAllocForm(false)}>
+              Cancel
+            </Button>
+            <Button type="submit" variant="primary">
+              Assign Asset
+            </Button>
+          </div>
+        </form>
+      </Drawer>
+
+      {/* Request Transfer Drawer */}
+      <Drawer
+        isOpen={showTransferForm}
+        onClose={() => setShowTransferForm(false)}
+        title="Request Relocation Transfer"
+        subtitle="Transfer holding assignments directly between staff workers"
+        size="sm"
+      >
+        <form onSubmit={handleRequestTransfer} className="space-y-4">
+          <div className="space-y-1.5">
+            <label className="block text-[10px] font-semibold text-text-muted uppercase tracking-wider">Select Assigned Asset *</label>
+            <select
+              required
+              value={transferAssetId}
+              onChange={(e) => setTransferAssetId(e.target.value)}
+              className="w-full bg-bg-secondary border border-border-primary text-xs text-text-primary rounded-lg px-3 py-2.5 focus:border-accent-purple/80 focus:outline-none focus:ring-2 focus:ring-accent-purple/20 transition-all cursor-pointer"
+            >
+              <option value="">Select Asset</option>
+              {allocations.filter(a => a.status === "Active" || a.status === "Overdue").map((a) => (
+                <option key={a.asset_id} value={a.asset_id}>{a.asset_name} ({a.asset_tag})</option>
+              ))}
+            </select>
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="block text-[10px] font-semibold text-text-muted uppercase tracking-wider">Transfer to Recipient *</label>
+            <select
+              required
+              value={transferToUser}
+              onChange={(e) => setTransferToUser(e.target.value)}
+              className="w-full bg-bg-secondary border border-border-primary text-xs text-text-primary rounded-lg px-3 py-2.5 focus:border-accent-purple/80 focus:outline-none focus:ring-2 focus:ring-accent-purple/20 transition-all cursor-pointer"
+            >
+              <option value="">Select Recipient</option>
+              {employees.map((e) => (
+                <option key={e.user_id} value={e.user_id}>{e.name} ({e.email})</option>
+              ))}
+            </select>
+          </div>
+
+          <Input
+            label="Justification Reason"
+            type="textarea"
+            value={transferNotes}
+            onChange={(e) => setTransferNotes(e.target.value)}
+            placeholder="Why is this asset transfer required?"
+          />
+
+          <div className="flex justify-end gap-2 pt-4 border-t border-border-primary">
+            <Button variant="secondary" onClick={() => setShowTransferForm(false)}>
+              Cancel
+            </Button>
+            <Button type="submit" variant="primary">
+              Request Transfer
+            </Button>
+          </div>
+        </form>
+      </Drawer>
+
+      {/* Check In / Return Drawer */}
+      <Drawer
+        isOpen={!!returnAllocId}
+        onClose={() => setReturnAllocId(null)}
+        title="Check-In Asset Return"
+        subtitle="Record device return and inspect functional hardware state"
+        size="sm"
+      >
+        <form onSubmit={handleReturnSubmit} className="space-y-4">
+          <div className="space-y-1.5">
+            <label className="block text-[10px] font-semibold text-text-muted uppercase tracking-wider">Return Condition State</label>
+            <select
+              value={returnCondition}
+              onChange={(e) => setReturnCondition(e.target.value)}
+              className="w-full bg-bg-secondary border border-border-primary text-xs text-text-primary rounded-lg px-3 py-2.5 focus:border-accent-purple/80 focus:outline-none focus:ring-2 focus:ring-accent-purple/20 transition-all cursor-pointer"
+            >
+              <option value="Good">Good (Ready to Re-allocate)</option>
+              <option value="Fair">Fair (Minor signs of wear)</option>
+              <option value="Poor">Poor (Needs repair inspection)</option>
+              <option value="Damaged">Damaged (Broken / Out of Service)</option>
+            </select>
+          </div>
+
+          <Input
+            label="Check-in Inspection Notes"
+            type="textarea"
+            value={returnNotes}
+            onChange={(e) => setReturnNotes(e.target.value)}
+            placeholder="Specify returned parts, cables, packaging or hardware wear details..."
+          />
+
+          <div className="flex justify-end gap-2 pt-4 border-t border-border-primary">
+            <Button variant="secondary" onClick={() => setReturnAllocId(null)}>
+              Cancel
+            </Button>
+            <Button type="submit" variant="primary">
+              Process Check-In
+            </Button>
+          </div>
+        </form>
+      </Drawer>
     </div>
   );
 }

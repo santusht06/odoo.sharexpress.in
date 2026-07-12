@@ -1,9 +1,14 @@
 import React, { useEffect, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { fetchBookings, createBooking, cancelBooking, rescheduleBooking } from "../store/slices/bookingSlice";
+import { fetchBookings, createBooking, cancelBooking } from "../store/slices/bookingSlice";
 import { fetchAssets } from "../store/slices/assetSlice";
 import { toast } from "react-toastify";
-import { Calendar, Plus, Trash2, Clock, CheckCircle } from "lucide-react";
+import { Calendar, Plus, Trash2, Clock } from "lucide-react";
+import Button from "../components/ui/Button";
+import Input from "../components/ui/Input";
+import Drawer from "../components/ui/Drawer";
+import StatusBadge from "../components/ui/StatusBadge";
+import { TableContainer, Table, Thead, Tbody, Tr, Th, Td, EmptyState } from "../components/ui/TableComponents";
 
 export default function Bookings() {
   const dispatch = useDispatch();
@@ -18,10 +23,13 @@ export default function Bookings() {
 
   const [showAddForm, setShowAddForm] = useState(false);
 
-  useEffect(() => {
+  const refreshData = () => {
     dispatch(fetchBookings());
-    // Query only bookable resources
     dispatch(fetchAssets({ is_bookable: true }));
+  };
+
+  useEffect(() => {
+    refreshData();
   }, [dispatch]);
 
   const handleBooking = (e) => {
@@ -41,6 +49,7 @@ export default function Bookings() {
         setStartTime("");
         setEndTime("");
         setPurpose("");
+        refreshData();
       })
       .catch((err) => toast.error(err));
   };
@@ -49,162 +58,149 @@ export default function Bookings() {
     if (window.confirm("Are you sure you want to cancel this booking?")) {
       dispatch(cancelBooking(bookingId))
         .unwrap()
-        .then(() => toast.success("Booking cancelled"))
+        .then(() => {
+          toast.success("Booking cancelled");
+          refreshData();
+        })
         .catch((err) => toast.error(err));
     }
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 text-text-primary">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-bold text-slate-900 tracking-tight">Resource Scheduling</h2>
-          <p className="text-xs text-slate-500 font-semibold mt-1">Book shared facilities, meeting rooms, vehicles, or team labs</p>
+          <h2 className="text-lg font-semibold tracking-tight">Facility Scheduling</h2>
+          <p className="text-xs text-text-muted mt-0.5 font-medium">Book conference rooms, demo vehicles, team devices, or hardware setups</p>
         </div>
-        <button
-          onClick={() => setShowAddForm(!showAddForm)}
-          className="btn-primary flex items-center gap-2 py-2 text-xs font-bold cursor-pointer"
+        <Button
+          onClick={() => setShowAddForm(true)}
+          variant="primary"
+          size="sm"
+          className="flex items-center gap-1.5"
         >
           <Plus className="h-4 w-4" /> Book a Slot
-        </button>
+        </Button>
       </div>
-
-      {showAddForm && (
-        <div className="jira-card p-6 bg-white max-w-lg">
-          <h3 className="text-xs font-bold text-slate-800 border-b border-slate-100 pb-3 uppercase tracking-wider mb-4">
-            Reserve Shared Resource
-          </h3>
-          <form onSubmit={handleBooking} className="space-y-4">
-            <div>
-              <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Select Shared Resource *</label>
-              <select
-                required
-                value={assetId}
-                onChange={(e) => setAssetId(e.target.value)}
-                className="jira-input w-full px-3 py-2 text-xs text-slate-800"
-              >
-                <option value="">Select Resource</option>
-                {bookableAssets.map((asset) => (
-                  <option key={asset.asset_id} value={asset.asset_id}>
-                    {asset.name} ({asset.location || "Default Location"})
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Start Time *</label>
-                <input
-                  type="datetime-local"
-                  required
-                  value={startTime}
-                  onChange={(e) => setStartTime(e.target.value)}
-                  className="jira-input w-full px-3 py-2 text-xs text-slate-800"
-                />
-              </div>
-
-              <div>
-                <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">End Time *</label>
-                <input
-                  type="datetime-local"
-                  required
-                  value={endTime}
-                  onChange={(e) => setEndTime(e.target.value)}
-                  className="jira-input w-full px-3 py-2 text-xs text-slate-800"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Booking Purpose</label>
-              <input
-                type="text"
-                value={purpose}
-                onChange={(e) => setPurpose(e.target.value)}
-                className="jira-input w-full px-3 py-2 text-xs text-slate-800"
-                placeholder="e.g. Weekly Standup Meeting"
-              />
-            </div>
-
-            <div className="flex justify-end gap-2 mt-4">
-              <button
-                type="button"
-                onClick={() => setShowAddForm(false)}
-                className="btn-secondary py-2 text-xs font-bold cursor-pointer"
-              >
-                Cancel
-              </button>
-              <button type="submit" className="btn-primary py-2 text-xs font-bold cursor-pointer">
-                Confirm Booking
-              </button>
-            </div>
-          </form>
-        </div>
-      )}
 
       {/* Bookings List */}
-      <div className="jira-card p-6 bg-white">
-        <h3 className="text-xs font-bold text-slate-800 border-b border-slate-100 pb-3 uppercase tracking-wider mb-4">
-          All Scheduled Bookings
-        </h3>
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs border-collapse">
-            <thead>
-              <tr className="border-b border-slate-200 text-slate-500 font-bold bg-slate-50">
-                <th className="py-2.5 px-3">Resource</th>
-                <th className="py-2.5 px-3">Location</th>
-                <th className="py-2.5 px-3">Booked By</th>
-                <th className="py-2.5 px-3">Start Time</th>
-                <th className="py-2.5 px-3">End Time</th>
-                <th className="py-2.5 px-3">Status</th>
-                <th className="py-2.5 px-3 text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {bookings.length === 0 ? (
-                <tr>
-                  <td colSpan="7" className="py-4 text-center text-slate-400">No active bookings scheduled</td>
-                </tr>
-              ) : (
-                bookings.map((booking) => (
-                  <tr key={booking.booking_id} className="hover:bg-slate-50">
-                    <td className="py-2.5 px-3 font-semibold text-slate-800">{booking.asset_name}</td>
-                    <td className="py-2.5 px-3 text-slate-500">{booking.location}</td>
-                    <td className="py-2.5 px-3 font-medium text-slate-700">{booking.booked_by_name}</td>
-                    <td className="py-2.5 px-3 text-slate-600 flex items-center gap-1">
-                      <Clock className="h-3.5 w-3.5 text-slate-400" />
-                      {new Date(booking.start_time).toLocaleString()}
-                    </td>
-                    <td className="py-2.5 px-3 text-slate-600">{new Date(booking.end_time).toLocaleString()}</td>
-                    <td className="py-2.5 px-3">
-                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                        booking.status === "Upcoming"
-                          ? "bg-blue-50 text-blue-700"
-                          : booking.status === "Completed"
-                          ? "bg-emerald-50 text-emerald-700"
-                          : "bg-slate-100 text-slate-600"
-                      }`}>
-                        {booking.status}
-                      </span>
-                    </td>
-                    <td className="py-2.5 px-3 text-right">
-                      {booking.status === "Upcoming" && (booking.booked_by === user?.user_id || ["ADMIN", "ASSET_MANAGER"].includes(user?.role)) && (
-                        <button
-                          onClick={() => handleCancel(booking.booking_id)}
-                          className="text-red-500 font-bold hover:underline cursor-pointer flex items-center gap-1 ml-auto text-xs"
-                        >
-                          <Trash2 className="h-3.5 w-3.5" /> Cancel
-                        </button>
-                      )}
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
+      <TableContainer>
+        {bookings.length === 0 ? (
+          <EmptyState 
+            title="No bookings scheduled" 
+            description="No staff members have currently reserved shared company infrastructure slots."
+            primaryActionLabel="Book a Slot"
+            onPrimaryAction={() => setShowAddForm(true)}
+          />
+        ) : (
+          <Table>
+            <Thead>
+              <Th>Resource</Th>
+              <Th>Location</Th>
+              <Th>Booked By</Th>
+              <Th>Start Time</Th>
+              <Th>End Time</Th>
+              <Th>Status</Th>
+              <Th className="text-right">Actions</Th>
+            </Thead>
+            <Tbody>
+              {bookings.map((booking) => (
+                <Tr key={booking.booking_id}>
+                  <Td className="font-semibold text-text-primary">{booking.asset_name}</Td>
+                  <Td className="text-text-secondary">{booking.location}</Td>
+                  <Td className="font-medium text-text-secondary">{booking.booked_by_name}</Td>
+                  <Td className="text-text-secondary">
+                    <div className="flex items-center gap-1.5 font-mono text-[11px]">
+                      <Clock className="h-3.5 w-3.5 text-text-muted" />
+                      {new Date(booking.start_time).toLocaleString(undefined, { dateStyle: "short", timeStyle: "short" })}
+                    </div>
+                  </Td>
+                  <Td className="text-text-secondary font-mono text-[11px]">
+                    {new Date(booking.end_time).toLocaleString(undefined, { dateStyle: "short", timeStyle: "short" })}
+                  </Td>
+                  <Td>
+                    <StatusBadge status={booking.status} />
+                  </Td>
+                  <Td className="text-right">
+                    {booking.status === "Upcoming" && (booking.booked_by === user?.user_id || ["ADMIN", "ASSET_MANAGER"].includes(user?.role)) && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleCancel(booking.booking_id)}
+                        className="text-status-danger hover:bg-status-danger/10 p-1"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </Td>
+                </Tr>
+              ))}
+            </Tbody>
+          </Table>
+        )}
+      </TableContainer>
+
+      {/* Book a Slot Drawer */}
+      <Drawer
+        isOpen={showAddForm}
+        onClose={() => setShowAddForm(false)}
+        title="Reserve Shared Resource"
+        subtitle="Provision scheduling locks on shared company assets"
+        size="sm"
+      >
+        <form onSubmit={handleBooking} className="space-y-4">
+          <div className="space-y-1.5">
+            <label className="block text-[10px] font-semibold text-text-muted uppercase tracking-wider">Select Shared Resource *</label>
+            <select
+              required
+              value={assetId}
+              onChange={(e) => setAssetId(e.target.value)}
+              className="w-full bg-bg-secondary border border-border-primary text-xs text-text-primary rounded-lg px-3 py-2.5 focus:border-accent-purple/80 focus:outline-none focus:ring-2 focus:ring-accent-purple/20 transition-all cursor-pointer"
+            >
+              <option value="">Select Resource</option>
+              {bookableAssets.map((asset) => (
+                <option key={asset.asset_id} value={asset.asset_id}>
+                  {asset.name} ({asset.location || "Default Location"})
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <Input
+              label="Start Time"
+              type="datetime-local"
+              required
+              value={startTime}
+              onChange={(e) => setStartTime(e.target.value)}
+            />
+
+            <Input
+              label="End Time"
+              type="datetime-local"
+              required
+              value={endTime}
+              onChange={(e) => setEndTime(e.target.value)}
+            />
+          </div>
+
+          <Input
+            label="Booking Purpose Justification"
+            value={purpose}
+            onChange={(e) => setPurpose(e.target.value)}
+            placeholder="e.g. Weekly Standup Meeting"
+          />
+
+          <div className="flex justify-end gap-2 pt-4 border-t border-border-primary">
+            <Button variant="secondary" onClick={() => setShowAddForm(false)}>
+              Cancel
+            </Button>
+            <Button type="submit" variant="primary">
+              Confirm Booking
+            </Button>
+          </div>
+        </form>
+      </Drawer>
     </div>
   );
 }

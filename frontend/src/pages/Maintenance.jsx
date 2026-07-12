@@ -11,6 +11,11 @@ import {
 import { fetchAssets } from "../store/slices/assetSlice";
 import { toast } from "react-toastify";
 import { Plus, Check, X, UserPlus, CheckSquare } from "lucide-react";
+import Button from "../components/ui/Button";
+import Input from "../components/ui/Input";
+import Drawer from "../components/ui/Drawer";
+import StatusBadge from "../components/ui/StatusBadge";
+import { TableContainer, Table, Thead, Tbody, Tr, Th, Td, EmptyState } from "../components/ui/TableComponents";
 
 export default function Maintenance() {
   const dispatch = useDispatch();
@@ -18,20 +23,25 @@ export default function Maintenance() {
   const { items: assets } = useSelector((state) => state.assets);
   const { user } = useSelector((state) => state.auth);
 
+  // Forms drawers
   const [showAddForm, setShowAddForm] = useState(false);
+  const [assignReqId, setAssignReqId] = useState(null);
+  const [resolveReqId, setResolveReqId] = useState(null);
+
+  // Form fields
   const [assetId, setAssetId] = useState("");
   const [desc, setDesc] = useState("");
   const [priority, setPriority] = useState("Medium");
-
-  const [assignReqId, setAssignReqId] = useState(null);
   const [techName, setTechName] = useState("");
-
-  const [resolveReqId, setResolveReqId] = useState(null);
   const [resNotes, setResNotes] = useState("");
 
-  useEffect(() => {
+  const refreshData = () => {
     dispatch(fetchMaintenanceRequests());
     dispatch(fetchAssets());
+  };
+
+  useEffect(() => {
+    refreshData();
   }, [dispatch]);
 
   const handleRaiseRequest = (e) => {
@@ -49,6 +59,7 @@ export default function Maintenance() {
         setAssetId("");
         setDesc("");
         setPriority("Medium");
+        refreshData();
       })
       .catch((err) => toast.error(err));
   };
@@ -56,14 +67,20 @@ export default function Maintenance() {
   const handleApprove = (id) => {
     dispatch(approveMaintenanceRequest(id))
       .unwrap()
-      .then(() => toast.success("Request approved"))
+      .then(() => {
+        toast.success("Request approved");
+        refreshData();
+      })
       .catch((err) => toast.error(err));
   };
 
   const handleReject = (id) => {
     dispatch(rejectMaintenanceRequest(id))
       .unwrap()
-      .then(() => toast.success("Request rejected"))
+      .then(() => {
+        toast.success("Request rejected");
+        refreshData();
+      })
       .catch((err) => toast.error(err));
   };
 
@@ -79,6 +96,7 @@ export default function Maintenance() {
         toast.success("Technician assigned!");
         setAssignReqId(null);
         setTechName("");
+        refreshData();
       })
       .catch((err) => toast.error(err));
   };
@@ -95,248 +113,244 @@ export default function Maintenance() {
         toast.success("Maintenance resolved. Asset marked Available!");
         setResolveReqId(null);
         setResNotes("");
+        refreshData();
       })
       .catch((err) => toast.error(err));
   };
 
-  // Group requests by status for Kanban Board
-  const getStatusColumn = (status) => {
-    return requests.filter(r => r.status === status);
-  };
-
-  const columns = ["Pending", "Approved", "In Progress", "Resolved"];
-
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 text-text-primary">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-bold text-slate-900 tracking-tight">Maintenance & Repairs</h2>
-          <p className="text-xs text-slate-500 font-semibold mt-1">Route and verify hardware repair requests through approved stages</p>
+          <h2 className="text-lg font-semibold tracking-tight">Repairs & Maintenance</h2>
+          <p className="text-xs text-text-muted mt-0.5 font-medium">Log hardware malfunctions, track ticket lines, and verify engineering technician dispatches</p>
         </div>
-        <button
-          onClick={() => setShowAddForm(!showAddForm)}
-          className="btn-primary flex items-center gap-2 py-2 text-xs font-bold cursor-pointer"
+        <Button
+          onClick={() => setShowAddForm(true)}
+          variant="primary"
+          size="sm"
+          className="flex items-center gap-1.5"
         >
-          <Plus className="h-4 w-4" /> Raise Issue
-        </button>
+          <Plus className="h-4 w-4" /> Raise Request
+        </Button>
       </div>
 
-      {showAddForm && (
-        <div className="jira-card p-6 bg-white max-w-lg">
-          <h3 className="text-xs font-bold text-slate-800 border-b border-slate-100 pb-3 uppercase tracking-wider mb-4">
-            Report Hardware Issue
-          </h3>
-          <form onSubmit={handleRaiseRequest} className="space-y-4">
-            <div>
-              <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Select Asset *</label>
-              <select
-                required
-                value={assetId}
-                onChange={(e) => setAssetId(e.target.value)}
-                className="jira-input w-full px-3 py-2 text-xs text-slate-800"
-              >
-                <option value="">Select Asset</option>
-                {assets.map((a) => (
-                  <option key={a.asset_id} value={a.asset_id}>{a.name} ({a.asset_tag})</option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Priority</label>
-              <select
-                value={priority}
-                onChange={(e) => setPriority(e.target.value)}
-                className="jira-input w-full px-3 py-2 text-xs text-slate-800"
-              >
-                <option value="Low">Low</option>
-                <option value="Medium">Medium</option>
-                <option value="High">High</option>
-                <option value="Critical">Critical</option>
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Issue Description *</label>
-              <textarea
-                required
-                value={desc}
-                onChange={(e) => setDesc(e.target.value)}
-                className="jira-input w-full px-3 py-2 text-xs text-slate-800 h-20"
-                placeholder="Explain the screen crack, hardware fault, battery issue etc."
-              />
-            </div>
-
-            <div className="flex justify-end gap-2 mt-4">
-              <button
-                type="button"
-                onClick={() => setShowAddForm(false)}
-                className="btn-secondary py-2 text-xs font-bold cursor-pointer"
-              >
-                Cancel
-              </button>
-              <button type="submit" className="btn-primary py-2 text-xs font-bold cursor-pointer">
-                Submit Request
-              </button>
-            </div>
-          </form>
-        </div>
-      )}
-
-      {/* Kanban Board Layout */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-6">
-        {columns.map((col) => {
-          const colRequests = getStatusColumn(col);
-          return (
-            <div key={col} className="bg-slate-100 rounded p-4 flex flex-col min-h-[500px]">
-              <div className="flex items-center justify-between border-b border-slate-200 pb-2 mb-3">
-                <span className="text-xs font-bold text-slate-700 uppercase tracking-wider">{col}</span>
-                <span className="bg-slate-200 text-slate-700 px-2 py-0.5 rounded text-[10px] font-bold">
-                  {colRequests.length}
-                </span>
-              </div>
-
-              <div className="space-y-3 flex-1 overflow-y-auto">
-                {colRequests.map((req) => (
-                  <div key={req.request_id} className="bg-white border border-slate-200 p-4 rounded shadow-xs space-y-2">
-                    <div className="flex justify-between items-start">
-                      <span className="text-[10px] font-bold text-blue-600 uppercase">{req.asset_tag}</span>
-                      <span className={`px-1.5 py-0.5 rounded text-[9px] font-extrabold uppercase ${
-                        req.priority === "Critical" || req.priority === "High"
-                          ? "bg-rose-50 text-rose-700"
-                          : "bg-slate-100 text-slate-600"
-                      }`}>{req.priority}</span>
+      {/* Tickets List */}
+      <TableContainer>
+        {requests.length === 0 ? (
+          <EmptyState 
+            title="No maintenance requests" 
+            description="There are currently no logged repair tickets or hardware incidents."
+            primaryActionLabel="Raise Request"
+            onPrimaryAction={() => setShowAddForm(true)}
+          />
+        ) : (
+          <Table>
+            <Thead>
+              <Th>Asset</Th>
+              <Th>Issue Description</Th>
+              <Th>Priority</Th>
+              <Th>Technician</Th>
+              <Th>Status</Th>
+              <Th className="text-right">Actions</Th>
+            </Thead>
+            <Tbody>
+              {requests.map((req) => (
+                <Tr key={req.request_id}>
+                  <Td className="font-semibold text-text-primary">
+                    <div>
+                      <p className="font-semibold">{req.asset_name}</p>
+                      <p className="text-[9px] text-accent-purple font-bold mt-0.5">{req.asset_tag}</p>
                     </div>
-                    <p className="text-xs font-bold text-slate-800">{req.asset_name}</p>
-                    <p className="text-[11px] text-slate-500 font-medium leading-relaxed truncate">{req.issue_description}</p>
-                    
-                    {req.assigned_technician && (
-                      <p className="text-[10px] text-slate-600 font-bold bg-slate-50 p-1 rounded">
-                        Tech: {req.assigned_technician}
-                      </p>
+                  </Td>
+                  <Td className="font-medium text-text-secondary leading-relaxed max-w-xs">{req.issue_description}</Td>
+                  <Td>
+                    <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                      req.priority === "High" 
+                        ? "bg-status-danger/10 text-status-danger" 
+                        : req.priority === "Medium"
+                        ? "bg-status-warning/10 text-status-warning"
+                        : "bg-status-info/10 text-status-info"
+                    }`}>
+                      {req.priority}
+                    </span>
+                  </Td>
+                  <Td className="text-text-secondary font-medium">
+                    {req.technician_name || (
+                      <span className="text-text-muted italic">Unassigned</span>
                     )}
-
-                    {/* Actions based on role and column state */}
-                    {["ADMIN", "ASSET_MANAGER"].includes(user?.role) && (
-                      <div className="flex gap-2 pt-2 border-t border-slate-100 justify-end">
-                        {req.status === "Pending" && (
-                          <>
-                            <button
-                              onClick={() => handleApprove(req.request_id)}
-                              className="p-1.5 bg-emerald-50 text-emerald-600 rounded hover:bg-emerald-100 cursor-pointer"
-                              title="Approve"
-                            >
-                              <Check className="h-3.5 w-3.5" />
-                            </button>
-                            <button
-                              onClick={() => handleReject(req.request_id)}
-                              className="p-1.5 bg-rose-50 text-rose-600 rounded hover:bg-rose-100 cursor-pointer"
-                              title="Reject"
-                            >
-                              <X className="h-3.5 w-3.5" />
-                            </button>
-                          </>
-                        )}
-
-                        {req.status === "Approved" && (
+                  </Td>
+                  <Td>
+                    <StatusBadge status={req.status} />
+                  </Td>
+                  <Td className="text-right">
+                    <div className="flex justify-end gap-1.5">
+                      {["ADMIN", "ASSET_MANAGER"].includes(user?.role) && req.status === "Pending Approval" && (
+                        <>
                           <button
-                            onClick={() => setAssignReqId(req.request_id)}
-                            className="btn-secondary py-1 px-2 text-[10px] font-bold flex items-center gap-1 cursor-pointer"
+                            onClick={() => handleApprove(req.request_id)}
+                            className="p-1 hover:bg-status-success/10 text-status-success rounded-md transition-colors cursor-pointer"
+                            title="Approve Ticket"
                           >
-                            <UserPlus className="h-3 w-3" /> Assign
+                            <Check className="h-4 w-4" />
                           </button>
-                        )}
-
-                        {req.status === "In Progress" && (
                           <button
-                            onClick={() => setResolveReqId(req.request_id)}
-                            className="btn-primary py-1 px-2 text-[10px] font-bold flex items-center gap-1 cursor-pointer"
+                            onClick={() => handleReject(req.request_id)}
+                            className="p-1 hover:bg-status-danger/10 text-status-danger rounded-md transition-colors cursor-pointer"
+                            title="Reject Ticket"
                           >
-                            <CheckSquare className="h-3 w-3" /> Resolve
+                            <X className="h-4 w-4" />
                           </button>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
-          );
-        })}
-      </div>
+                        </>
+                      )}
 
-      {/* Assign Tech Modal */}
-      {assignReqId && (
-        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 z-50">
-          <div className="bg-white border border-slate-200 shadow-xl rounded max-w-sm w-full p-6 relative">
-            <button onClick={() => setAssignReqId(null)} className="absolute top-4 right-4 text-slate-400 font-bold">✕</button>
-            <h3 className="text-xs font-bold text-slate-800 border-b border-slate-100 pb-3 uppercase tracking-wider mb-4">
-              Assign Repair Technician
-            </h3>
-            <form onSubmit={handleAssign} className="space-y-4">
-              <div>
-                <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Technician Name *</label>
-                <input
-                  type="text"
-                  required
-                  value={techName}
-                  onChange={(e) => setTechName(e.target.value)}
-                  className="jira-input w-full px-3 py-2 text-xs text-slate-800"
-                  placeholder="e.g. John Doe Tech services"
-                />
-              </div>
-              <div className="flex justify-end gap-2">
-                <button
-                  type="button"
-                  onClick={() => setAssignReqId(null)}
-                  className="btn-secondary py-2 text-xs font-bold cursor-pointer"
-                >
-                  Cancel
-                </button>
-                <button type="submit" className="btn-primary py-2 text-xs font-bold cursor-pointer">
-                  Start Repair
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+                      {["ADMIN", "ASSET_MANAGER"].includes(user?.role) && req.status === "Approved" && !req.technician_name && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setAssignReqId(req.request_id)}
+                          className="flex items-center gap-1 text-accent-purple"
+                        >
+                          <UserPlus className="h-3.5 w-3.5" /> Assign Tech
+                        </Button>
+                      )}
 
-      {/* Resolve Modal */}
-      {resolveReqId && (
-        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 z-50">
-          <div className="bg-white border border-slate-200 shadow-xl rounded max-w-sm w-full p-6 relative">
-            <button onClick={() => setResolveReqId(null)} className="absolute top-4 right-4 text-slate-400 font-bold">✕</button>
-            <h3 className="text-xs font-bold text-slate-800 border-b border-slate-100 pb-3 uppercase tracking-wider mb-4">
-              Mark Maintenance Resolved
-            </h3>
-            <form onSubmit={handleResolve} className="space-y-4">
-              <div>
-                <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Resolution Summary *</label>
-                <textarea
-                  required
-                  value={resNotes}
-                  onChange={(e) => setResNotes(e.target.value)}
-                  className="jira-input w-full px-3 py-2 text-xs text-slate-800 h-20"
-                  placeholder="Explain what was fixed (e.g. replaced screen module)"
-                />
-              </div>
-              <div className="flex justify-end gap-2">
-                <button
-                  type="button"
-                  onClick={() => setResolveReqId(null)}
-                  className="btn-secondary py-2 text-xs font-bold cursor-pointer"
-                >
-                  Cancel
-                </button>
-                <button type="submit" className="btn-primary py-2 text-xs font-bold cursor-pointer">
-                  Resolve Request
-                </button>
-              </div>
-            </form>
+                      {["ADMIN", "ASSET_MANAGER"].includes(user?.role) && req.status === "Under Repair" && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setResolveReqId(req.request_id)}
+                          className="flex items-center gap-1 text-status-success"
+                        >
+                          <CheckSquare className="h-3.5 w-3.5" /> Resolve Ticket
+                        </Button>
+                      )}
+                    </div>
+                  </Td>
+                </Tr>
+              ))}
+            </Tbody>
+          </Table>
+        )}
+      </TableContainer>
+
+      {/* Raise Request Drawer */}
+      <Drawer
+        isOpen={showAddForm}
+        onClose={() => setShowAddForm(false)}
+        title="Raise Repair Incident"
+        subtitle="Log a hardware issue for specialized tech inspection"
+        size="sm"
+      >
+        <form onSubmit={handleRaiseRequest} className="space-y-4">
+          <div className="space-y-1.5">
+            <label className="block text-[10px] font-semibold text-text-muted uppercase tracking-wider">Select Malfunctioning Asset *</label>
+            <select
+              required
+              value={assetId}
+              onChange={(e) => setAssetId(e.target.value)}
+              className="w-full bg-bg-secondary border border-border-primary text-xs text-text-primary rounded-lg px-3 py-2.5 focus:border-accent-purple/80 focus:outline-none focus:ring-2 focus:ring-accent-purple/20 transition-all cursor-pointer"
+            >
+              <option value="">Select Asset</option>
+              {assets.map((asset) => (
+                <option key={asset.asset_id} value={asset.asset_id}>
+                  {asset.name} ({asset.asset_tag})
+                </option>
+              ))}
+            </select>
           </div>
-        </div>
-      )}
+
+          <div className="space-y-1.5">
+            <label className="block text-[10px] font-semibold text-text-muted uppercase tracking-wider">Priority Level</label>
+            <select
+              value={priority}
+              onChange={(e) => setPriority(e.target.value)}
+              className="w-full bg-bg-secondary border border-border-primary text-xs text-text-primary rounded-lg px-3 py-2.5 focus:border-accent-purple/80 focus:outline-none focus:ring-2 focus:ring-accent-purple/20 transition-all cursor-pointer"
+            >
+              <option value="Low">Low (Minor annoyance)</option>
+              <option value="Medium">Medium (Functional impact)</option>
+              <option value="High">High (System down / blocker)</option>
+            </select>
+          </div>
+
+          <Input
+            label="Issue Malfunction Details"
+            type="textarea"
+            required
+            value={desc}
+            onChange={(e) => setDesc(e.target.value)}
+            placeholder="Describe hardware cracks, visual issues, hardware components behaving abnormally..."
+          />
+
+          <div className="flex justify-end gap-2 pt-4 border-t border-border-primary">
+            <Button variant="secondary" onClick={() => setShowAddForm(false)}>
+              Cancel
+            </Button>
+            <Button type="submit" variant="primary">
+              Submit Ticket
+            </Button>
+          </div>
+        </form>
+      </Drawer>
+
+      {/* Assign Technician Drawer */}
+      <Drawer
+        isOpen={!!assignReqId}
+        onClose={() => setAssignReqId(null)}
+        title="Assign Support Specialist"
+        subtitle="Route approved repair request to an on-site technician"
+        size="sm"
+      >
+        <form onSubmit={handleAssign} className="space-y-4">
+          <Input
+            label="Technician Full Name"
+            required
+            autoFocus
+            value={techName}
+            onChange={(e) => setTechName(e.target.value)}
+            placeholder="e.g. John Doe"
+          />
+
+          <div className="flex justify-end gap-2 pt-4 border-t border-border-primary">
+            <Button variant="secondary" onClick={() => setAssignReqId(null)}>
+              Cancel
+            </Button>
+            <Button type="submit" variant="primary">
+              Assign Dispatcher
+            </Button>
+          </div>
+        </form>
+      </Drawer>
+
+      {/* Resolve Incident Drawer */}
+      <Drawer
+        isOpen={!!resolveReqId}
+        onClose={() => setResolveReqId(null)}
+        title="Resolve Repair Incident"
+        subtitle="Mark ticket closed and document resolution details"
+        size="sm"
+      >
+        <form onSubmit={handleResolve} className="space-y-4">
+          <Input
+            label="Resolution Inspection Notes"
+            type="textarea"
+            required
+            autoFocus
+            value={resNotes}
+            onChange={(e) => setResNotes(e.target.value)}
+            placeholder="Specify replacement parts, fixes deployed, functionally verified components..."
+          />
+
+          <div className="flex justify-end gap-2 pt-4 border-t border-border-primary">
+            <Button variant="secondary" onClick={() => setResolveReqId(null)}>
+              Cancel
+            </Button>
+            <Button type="submit" variant="primary">
+              Mark Resolved
+            </Button>
+          </div>
+        </form>
+      </Drawer>
     </div>
   );
 }

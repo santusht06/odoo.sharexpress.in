@@ -1,7 +1,9 @@
-import React from "react";
+import React, { useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { logoutUser } from "../store/slices/authSlice";
+import { useTheme } from "../context/ThemeContext";
+import { motion, AnimatePresence } from "framer-motion";
 import { 
   LayoutDashboard, 
   FolderTree, 
@@ -11,13 +13,21 @@ import {
   ClipboardCheck, 
   BarChart3, 
   LogOut,
-  Users
+  Users,
+  Sun,
+  Moon,
+  ChevronLeft,
+  ChevronRight,
+  Terminal,
+  Activity
 } from "lucide-react";
 
 export default function Sidebar() {
   const { user } = useSelector((state) => state.auth);
+  const { theme, toggleTheme } = useTheme();
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const [isCollapsed, setIsCollapsed] = useState(false);
 
   const handleLogout = () => {
     dispatch(logoutUser()).then(() => {
@@ -40,15 +50,48 @@ export default function Sidebar() {
   const filteredItems = navItems.filter(item => item.roles.includes(user?.role));
 
   return (
-    <aside className="w-64 jira-sidebar flex flex-col min-h-screen text-slate-700">
-      <div className="p-6 border-b border-gray-200">
-        <h1 className="text-xl font-bold text-blue-600 tracking-tight flex items-center gap-2">
-          <Boxes className="h-6 w-6" /> AssetFlow
-        </h1>
-        <span className="text-xs text-gray-500 font-medium">Enterprise ERP</span>
+    <motion.aside 
+      animate={{ width: isCollapsed ? 68 : 240 }}
+      transition={{ type: "spring", damping: 25, stiffness: 220 }}
+      className="flex h-screen flex-col border-r border-border-primary bg-bg-secondary text-text-secondary select-none relative z-20 shrink-0"
+    >
+      {/* Workspace / Header */}
+      <div className="flex h-14 items-center justify-between border-b border-border-primary px-4.5">
+        <div className="flex items-center gap-2 overflow-hidden">
+          <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-accent-purple text-white shadow-sm shrink-0">
+            <Boxes className="h-4.5 w-4.5" />
+          </div>
+          {!isCollapsed && (
+            <div className="truncate">
+              <h1 className="text-xs font-semibold text-text-primary tracking-tight leading-none">AssetFlow</h1>
+              <span className="text-[9px] text-text-muted font-medium uppercase tracking-wider">Enterprise ERP</span>
+            </div>
+          )}
+        </div>
+        
+        {!isCollapsed && (
+          <button 
+            onClick={() => setIsCollapsed(true)}
+            className="rounded-md p-1 hover:bg-bg-card hover:text-text-primary transition-colors text-text-muted"
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </button>
+        )}
       </div>
 
-      <nav className="flex-1 px-3 py-4 space-y-1">
+      {isCollapsed && (
+        <div className="flex justify-center py-2.5">
+          <button 
+            onClick={() => setIsCollapsed(false)}
+            className="rounded-md p-1 hover:bg-bg-card hover:text-text-primary transition-colors text-text-muted"
+          >
+            <ChevronRight className="h-4 w-4" />
+          </button>
+        </div>
+      )}
+
+      {/* Navigation Link List */}
+      <nav className="flex-1 space-y-0.5 px-2.5 py-4 overflow-y-auto">
         {filteredItems.map((item) => {
           const Icon = item.icon;
           return (
@@ -56,38 +99,75 @@ export default function Sidebar() {
               key={item.to}
               to={item.to}
               className={({ isActive }) =>
-                `flex items-center gap-3 px-3 py-2 text-sm font-medium rounded transition-colors ${
+                `flex items-center gap-3 rounded-lg px-2.5 py-2 text-xs font-medium transition-all ${
                   isActive
-                    ? "bg-blue-50 text-blue-600"
-                    : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+                    ? "bg-bg-card text-text-primary border border-border-primary shadow-[0_1px_2px_rgba(0,0,0,0.02)]"
+                    : "hover:bg-bg-card/40 hover:text-text-primary border border-transparent"
                 }`
               }
             >
-              <Icon className="h-4 w-4 shrink-0" />
-              {item.label}
+              {({ isActive }) => (
+                <>
+                  <Icon className={`h-4 w-4 shrink-0 transition-colors ${isActive ? "text-accent-purple" : "text-text-muted"}`} />
+                  {!isCollapsed && <span className="truncate">{item.label}</span>}
+                </>
+              )}
             </NavLink>
           );
         })}
       </nav>
 
-      <div className="p-4 border-t border-gray-200 bg-gray-50">
-        <div className="flex items-center gap-3 mb-4">
-          <div className="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center font-bold text-blue-700 text-sm">
-            {user?.user_name?.charAt(0).toUpperCase() || "U"}
-          </div>
-          <div className="truncate">
-            <p className="text-xs font-semibold text-gray-700 truncate">{user?.user_name}</p>
-            <p className="text-[10px] text-gray-500 truncate">{user?.role}</p>
-          </div>
-        </div>
+      {/* Footer Area with Theme toggle / Profile / Logout */}
+      <div className="border-t border-border-primary p-3 space-y-2.5 bg-bg-secondary/40 shrink-0">
+        
+        {/* Theme Switcher Toggle */}
         <button
-          onClick={handleLogout}
-          className="w-full flex items-center justify-center gap-2 px-3 py-2 text-xs font-semibold text-red-600 bg-red-50 hover:bg-red-100 rounded transition-colors"
+          onClick={toggleTheme}
+          className="flex w-full items-center justify-between rounded-lg px-2.5 py-1.5 text-xs text-text-muted hover:bg-bg-card hover:text-text-primary border border-transparent transition-colors"
         >
-          <LogOut className="h-3.5 w-3.5" />
-          Logout
+          <div className="flex items-center gap-3">
+            {theme === "dark" ? (
+              <>
+                <Sun className="h-4 w-4 shrink-0" />
+                {!isCollapsed && <span>Light Mode</span>}
+              </>
+            ) : (
+              <>
+                <Moon className="h-4 w-4 shrink-0" />
+                {!isCollapsed && <span>Dark Mode</span>}
+              </>
+            )}
+          </div>
+          {!isCollapsed && (
+            <span className="rounded bg-bg-secondary px-1 text-[9px] font-mono border border-border-primary">T T</span>
+          )}
         </button>
+
+        {/* User Card */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2.5 overflow-hidden">
+            <div className="flex h-7 w-7 items-center justify-center rounded-full bg-accent-purple/10 text-accent-purple font-semibold text-xs border border-accent-purple/20 shrink-0 select-none">
+              {user?.user_name?.charAt(0).toUpperCase() || "U"}
+            </div>
+            {!isCollapsed && (
+              <div className="truncate">
+                <p className="text-[11px] font-semibold text-text-primary leading-tight truncate">{user?.user_name}</p>
+                <p className="text-[9px] text-text-muted leading-tight truncate uppercase tracking-wider">{user?.role}</p>
+              </div>
+            )}
+          </div>
+          
+          {!isCollapsed && (
+            <button
+              onClick={handleLogout}
+              className="rounded-lg p-1.5 text-text-muted hover:bg-bg-card hover:text-status-danger transition-colors"
+              title="Logout"
+            >
+              <LogOut className="h-3.5 w-3.5" />
+            </button>
+          )}
+        </div>
       </div>
-    </aside>
+    </motion.aside>
   );
 }

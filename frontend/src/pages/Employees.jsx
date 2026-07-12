@@ -3,7 +3,10 @@ import { useSelector, useDispatch } from "react-redux";
 import { fetchEmployees, toggleEmployeeStatus } from "../store/slices/employeeSlice";
 import { fetchDepartments } from "../store/slices/departmentSlice";
 import { toast } from "react-toastify";
-import { Users, CheckCircle, XCircle } from "lucide-react";
+import { Users, Shield, RefreshCw } from "lucide-react";
+import Button from "../components/ui/Button";
+import StatusBadge from "../components/ui/StatusBadge";
+import { TableContainer, Table, Thead, Tbody, Tr, Th, Td, EmptyState } from "../components/ui/TableComponents";
 
 export default function Employees() {
   const dispatch = useDispatch();
@@ -11,84 +14,92 @@ export default function Employees() {
   const { items: departments } = useSelector((state) => state.departments);
   const { user } = useSelector((state) => state.auth);
 
-  useEffect(() => {
+  const refreshData = () => {
     dispatch(fetchEmployees());
     dispatch(fetchDepartments());
+  };
+
+  useEffect(() => {
+    refreshData();
   }, [dispatch]);
 
   const handleToggleStatus = (id) => {
     dispatch(toggleEmployeeStatus(id)).unwrap()
-      .then(() => toast.success("Employee status updated"))
+      .then(() => toast.success("Employee access control status updated"))
       .catch((err) => toast.error(err));
   };
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-xl font-bold text-slate-900 tracking-tight">Employee Directory</h2>
-        <p className="text-xs text-slate-500 font-semibold mt-1">Browse company staff and verify active system access controls</p>
+    <div className="space-y-6 text-text-primary">
+      <div className="flex justify-between items-center">
+        <div>
+          <h2 className="text-lg font-semibold tracking-tight">Staff Directory</h2>
+          <p className="text-xs text-text-muted mt-0.5 font-medium">Verify employee directory records and manage active access control profiles</p>
+        </div>
+        <Button variant="secondary" size="sm" onClick={refreshData} className="flex items-center gap-1.5">
+          <RefreshCw className="h-3.5 w-3.5" /> Refresh
+        </Button>
       </div>
 
-      <div className="jira-card p-6 bg-white">
-        <h3 className="text-xs font-bold text-slate-800 border-b border-slate-100 pb-3 uppercase tracking-wider mb-4">
-          All Registered Employees
-        </h3>
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs border-collapse">
-            <thead>
-              <tr className="border-b border-slate-200 text-slate-500 font-bold bg-slate-50">
-                <th className="py-2.5 px-3">Name</th>
-                <th className="py-2.5 px-3">Email</th>
-                <th className="py-2.5 px-3">Department</th>
-                <th className="py-2.5 px-3">System Role</th>
-                <th className="py-2.5 px-3">Access Status</th>
-                {user?.role === "ADMIN" && (
-                  <th className="py-2.5 px-3 text-right">Actions</th>
-                )}
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
+      <TableContainer>
+        {employees.length === 0 ? (
+          <EmptyState 
+            title="No staff employees found" 
+            description="The staff directory lists no active user accounts currently." 
+          />
+        ) : (
+          <Table>
+            <Thead>
+              <Th>Name</Th>
+              <Th>Email Address</Th>
+              <Th>Department Unit</Th>
+              <Th>Access Privileges</Th>
+              <Th>Verification State</Th>
+              {user?.role === "ADMIN" && (
+                <Th className="text-right">Actions</Th>
+              )}
+            </Thead>
+            <Tbody>
               {employees.map((emp) => (
-                <tr key={emp.user_id} className="hover:bg-slate-50">
-                  <td className="py-2.5 px-3 font-semibold text-slate-800 flex items-center gap-2">
-                    <div className="h-6 w-6 rounded-full bg-blue-100 text-blue-700 text-xs font-bold flex items-center justify-center">
-                      {emp.name?.charAt(0).toUpperCase()}
+                <Tr key={emp.user_id}>
+                  <Td className="font-semibold text-text-primary">
+                    <div className="flex items-center gap-3">
+                      <div className="h-7 w-7 rounded-full bg-accent-purple/10 text-accent-purple text-xs font-semibold flex items-center justify-center border border-accent-purple/20 select-none">
+                        {emp.name?.charAt(0).toUpperCase()}
+                      </div>
+                      <span className="font-medium text-text-primary">{emp.name}</span>
                     </div>
-                    {emp.name}
-                  </td>
-                  <td className="py-2.5 px-3 text-slate-500">{emp.email}</td>
-                  <td className="py-2.5 px-3 text-slate-500">{emp.department_name || "Unassigned"}</td>
-                  <td className="py-2.5 px-3 font-bold text-slate-600">{emp.role}</td>
-                  <td className="py-2.5 px-3">
-                    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                      emp.is_active ? "bg-emerald-50 text-emerald-700" : "bg-red-50 text-red-700"
-                    }`}>
-                      {emp.is_active ? <CheckCircle className="h-3 w-3" /> : <XCircle className="h-3 w-3" />}
-                      {emp.is_active ? "Active" : "Locked"}
+                  </Td>
+                  <Td className="font-medium text-text-secondary">{emp.email}</Td>
+                  <Td className="text-text-secondary">{emp.department_name || "Central Unit"}</Td>
+                  <Td className="text-text-secondary">
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded border border-border-primary bg-bg-secondary text-[10px] font-semibold text-text-secondary uppercase tracking-wider">
+                      <Shield className="h-3 w-3 text-accent-purple" />
+                      {emp.role}
                     </span>
-                  </td>
+                  </Td>
+                  <Td>
+                    <StatusBadge status={emp.is_active ? "Active" : "Retired"} />
+                  </Td>
                   {user?.role === "ADMIN" && (
-                    <td className="py-2.5 px-3 text-right">
+                    <Td className="text-right">
                       {emp.user_id !== user.user_id && (
-                        <button
+                        <Button
+                          variant={emp.is_active ? "secondary" : "primary"}
+                          size="sm"
                           onClick={() => handleToggleStatus(emp.user_id)}
-                          className={`px-3 py-1 rounded text-xs font-semibold cursor-pointer ${
-                            emp.is_active 
-                              ? "bg-slate-100 text-slate-600 hover:bg-slate-200" 
-                              : "bg-emerald-50 text-emerald-600 hover:bg-emerald-100"
-                          }`}
                         >
                           {emp.is_active ? "Suspend" : "Activate"}
-                        </button>
+                        </Button>
                       )}
-                    </td>
+                    </Td>
                   )}
-                </tr>
+                </Tr>
               ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
+            </Tbody>
+          </Table>
+        )}
+      </TableContainer>
     </div>
   );
 }
