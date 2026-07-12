@@ -1,0 +1,68 @@
+# =========================
+# Core Framework
+# =========================
+fastapi
+uvicorn[standard]
+
+# =========================
+# Environment Variables
+# =========================
+python-dotenv
+
+# =========================
+# Database (MongoDB)
+# =========================
+motor
+pymongo
+
+# =========================
+# Validation / Schemas
+# =========================
+pydantic
+pydantic-settings
+email-validator
+
+# =========================
+# Authentication & Security
+# =========================
+python-jose[cryptography]
+cryptography
+itsdangerous
+passlib[bcrypt]
+
+# =========================
+# OAuth (Google)
+# =========================
+authlib
+httpx
+
+# =========================
+# Mail (OTP Emails)
+# =========================
+fastapi-mail
+
+# =========================
+# Redis (OTP / sessions)
+# =========================
+redis
+
+# =========================
+# File handling
+# =========================
+python-multipart
+
+# =========================
+# QR Code generation
+# =========================
+qrcode[pil]
+Pillow
+
+# =========================
+# Session Middleware
+# =========================
+itsdangerous
+
+# =========================
+# Utilities
+# =========================
+python-dateutil
