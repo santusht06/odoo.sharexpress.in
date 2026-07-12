@@ -96,7 +96,10 @@ class AIController:
                 "Your goal is to help users manage, search, and troubleshoot assets, checkouts, maintenance tickets, and calendars.\n"
                 "Strictly answer the user's question using the live database context provided below.\n"
                 "If calculations are required (e.g. count of assets or active items), perform them based on the context data.\n"
-                "Make your response highly professional, structured, concise, and structured with clean markdown bullet points. Do not mention that you got context or documents; act as a native system integration."
+                "You MUST return a JSON object with exactly two keys:\n"
+                "- 'answer': your primary detailed response in markdown (using structured lists and bold key phrases).\n"
+                "- 'suggestions': a list of 2-3 relevant follow-up questions the user might want to ask next based on your response and the context.\n"
+                "Do not wrap your output in markdown ```json ... ``` code blocks; output ONLY raw JSON."
             )
 
             prompt = (
@@ -162,11 +165,38 @@ class AIController:
                     print(f"Gemini API connection error: {ex}")
 
             if not answer:
-                answer = "I'm sorry, I was unable to reach the AI models at this moment. Please check your credentials and connection."
+                answer = '{"answer": "I\'m sorry, I was unable to reach the AI models at this moment. Please check your credentials and connection.", "suggestions": []}'
+
+            # 4. JSON OUTPUT PARSING
+            import json
+            import re
+            
+            clean_answer = answer.strip()
+            # Clean up markdown code blocks if the LLM outputted them
+            if clean_answer.startswith("```"):
+                clean_answer = re.sub(r"^```[a-zA-Z]*\n", "", clean_answer)
+                clean_answer = re.sub(r"\n```$", "", clean_answer)
+            clean_answer = clean_answer.strip()
+
+            default_suggestions = [
+                "What assets are under maintenance?",
+                "Who has overdue returns?",
+                "Show recent activity logs"
+            ]
+
+            try:
+                parsed = json.loads(clean_answer)
+                main_answer = parsed.get("answer", answer)
+                suggestions = parsed.get("suggestions", default_suggestions)
+            except Exception:
+                # If parsing fails, treat the raw answer as the main text and use default fallback suggestions
+                main_answer = answer
+                suggestions = default_suggestions
 
             return {
                 "success": True,
-                "answer": answer,
+                "answer": main_answer,
+                "suggestions": suggestions,
                 "provider": provider_used,
                 "timestamp": datetime.utcnow().isoformat()
             }

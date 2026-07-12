@@ -16,12 +16,12 @@ export default function AIAssistant() {
   const [loading, setLoading] = useState(false);
   const messagesEndRef = useRef(null);
 
-  const suggestions = [
+  const [activeSuggestions, setActiveSuggestions] = useState([
     "What assets are under maintenance?",
     "Who has overdue returns?",
     "Show recent activity logs",
     "Are there active bookings?"
-  ];
+  ]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -40,6 +40,7 @@ export default function AIAssistant() {
     setMessages(prev => [...prev, userMessage]);
     setInput("");
     setLoading(true);
+    setActiveSuggestions([]); // Clear current suggestions during generation
 
     try {
       const response = await api.post("/ai/chat", { message: text });
@@ -48,12 +49,14 @@ export default function AIAssistant() {
         content: response.data?.answer || "I could not generate an answer."
       };
       setMessages(prev => [...prev, botMessage]);
+      setActiveSuggestions(response.data?.suggestions || []);
     } catch (error) {
       const errorMessage = {
         role: "assistant",
         content: `Error connecting to AI backend: ${error}`
       };
       setMessages(prev => [...prev, errorMessage]);
+      setActiveSuggestions([]);
     } finally {
       setLoading(false);
     }
@@ -201,13 +204,13 @@ export default function AIAssistant() {
               </div>
 
               {/* Suggestions Panel */}
-              {messages.length === 1 && !loading && (
-                <div className="px-4 py-2 space-y-2 shrink-0">
+              {activeSuggestions.length > 0 && !loading && (
+                <div className="px-4 py-2 space-y-2 shrink-0 border-t border-border-primary/40 bg-bg-secondary/10">
                   <span className="text-[10px] text-text-muted font-semibold uppercase tracking-wider flex items-center gap-1">
-                    <HelpCircle className="h-3 w-3" /> Quick suggestions
+                    <HelpCircle className="h-3 w-3" /> Suggested Follow-ups
                   </span>
                   <div className="flex flex-wrap gap-1.5">
-                    {suggestions.map((s, idx) => (
+                    {activeSuggestions.map((s, idx) => (
                       <button
                         key={idx}
                         onClick={() => handleSendMessage(s)}
