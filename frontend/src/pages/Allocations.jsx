@@ -6,6 +6,7 @@ import { fetchAssets } from "../store/slices/assetSlice";
 import { fetchEmployees } from "../store/slices/employeeSlice";
 import { toast } from "react-toastify";
 import { Plus, RefreshCw, Calendar, Check, X, ArrowLeftRight } from "lucide-react";
+import { useSearchParams } from "react-router-dom";
 import Button from "../components/ui/Button";
 import Input from "../components/ui/Input";
 import Drawer from "../components/ui/Drawer";
@@ -14,7 +15,11 @@ import { TableContainer, Table, Thead, Tbody, Tr, Th, Td, EmptyState } from "../
 
 export default function Allocations() {
   const dispatch = useDispatch();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const statusParam = searchParams.get("status") || "";
+
   const [activeTab, setActiveTab] = useState("allocations");
+  const [statusFilter, setStatusFilter] = useState(statusParam);
 
   const { items: allocations } = useSelector((state) => state.allocations);
   const { items: transfers } = useSelector((state) => state.transfers);
@@ -41,7 +46,7 @@ export default function Allocations() {
   const [transferNotes, setTransferNotes] = useState("");
 
   const refreshData = () => {
-    dispatch(fetchAllocations());
+    dispatch(fetchAllocations({ status: statusFilter || undefined }));
     dispatch(fetchTransfers());
     dispatch(fetchAssets({ status: "Available" }));
     dispatch(fetchEmployees());
@@ -49,7 +54,7 @@ export default function Allocations() {
 
   useEffect(() => {
     refreshData();
-  }, [dispatch]);
+  }, [dispatch, statusFilter]);
 
   const handleAllocate = (e) => {
     e.preventDefault();
@@ -192,30 +197,55 @@ export default function Allocations() {
 
       {/* Allocations View */}
       {activeTab === "allocations" && (
-        <TableContainer>
-          {allocations.length === 0 ? (
-            <EmptyState 
-              title="No active assignments" 
-              description="No company assets are currently checked out to employees."
-              primaryActionLabel={["ADMIN", "ASSET_MANAGER"].includes(user?.role) ? "Allocate Asset" : null}
-              onPrimaryAction={["ADMIN", "ASSET_MANAGER"].includes(user?.role) ? () => setShowAllocForm(true) : null}
-            />
-          ) : (
-            <Table>
-              <Thead>
-                <Th>Asset</Th>
-                <Th>Tag</Th>
-                <Th>Holder</Th>
-                <Th>Expected Return</Th>
-                <Th>Status</Th>
-                <Th className="text-right">Actions</Th>
-              </Thead>
-              <Tbody>
-                {allocations.map((a) => (
-                  <Tr key={a.allocation_id}>
-                    <Td className="font-semibold text-text-primary">{a.asset_name}</Td>
-                    <Td className="font-bold text-accent-purple">{a.asset_tag}</Td>
-                    <Td className="font-medium text-text-secondary">{a.allocated_to_name}</Td>
+        <>
+          <div className="flex gap-4 p-4 rounded-xl border border-border-primary bg-bg-card shadow-sm mb-1.5">
+            <div className="flex items-center gap-2">
+              <label className="text-[10px] font-semibold uppercase tracking-wider text-text-muted">Filter Status</label>
+              <select
+                value={statusFilter}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setStatusFilter(val);
+                  setSearchParams({ status: val });
+                }}
+                className="bg-bg-secondary border border-border-primary rounded-lg text-xs px-3 py-1.5 font-medium text-text-primary outline-none focus:border-accent-purple cursor-pointer"
+              >
+                <option value="">All Assignments</option>
+                <option value="Active">Active</option>
+                <option value="Overdue">Overdue</option>
+              </select>
+            </div>
+          </div>
+
+          <TableContainer>
+            {allocations.length === 0 ? (
+              <EmptyState 
+                title="No active assignments" 
+                description="No company assets are currently checked out to employees."
+                primaryActionLabel={["ADMIN", "ASSET_MANAGER"].includes(user?.role) ? "Allocate Asset" : null}
+                onPrimaryAction={["ADMIN", "ASSET_MANAGER"].includes(user?.role) ? () => setShowAllocForm(true) : null}
+              />
+            ) : (
+              <Table>
+                <Thead>
+                  <Th>Asset</Th>
+                  <Th>Tag</Th>
+                  <Th>Holder</Th>
+                  <Th>Expected Return</Th>
+                  <Th>Status</Th>
+                  <Th className="text-right">Actions</Th>
+                </Thead>
+                <Tbody>
+                  {allocations.map((a) => (
+                    <Tr key={a.allocation_id}>
+                      <Td className="font-semibold text-text-primary">{a.asset_name}</Td>
+                      <Td className="font-bold text-accent-purple">{a.asset_tag}</Td>
+                      <Td className="font-medium text-text-secondary">
+                        <div className="flex flex-col">
+                          <span>{a.allocated_to_name}</span>
+                          <span className="text-[10px] text-text-muted font-normal mt-0.5">{a.allocated_to_email}</span>
+                        </div>
+                      </Td>
                     <Td className="text-text-muted">
                       {a.expected_return_date ? new Date(a.expected_return_date).toLocaleDateString() : "Permanent"}
                     </Td>
@@ -240,6 +270,7 @@ export default function Allocations() {
             </Table>
           )}
         </TableContainer>
+      </>
       )}
 
       {/* Transfers View */}

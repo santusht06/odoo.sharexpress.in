@@ -33,42 +33,48 @@ export default function Dashboard() {
       value: kpis.assets_available,
       icon: CheckCircle2,
       color: "border-status-success/20 text-status-success",
-      bgGradient: "from-status-success/5 to-transparent"
+      bgGradient: "from-status-success/5 to-transparent",
+      link: "/assets?status=Available"
     },
     {
       label: "Assets Allocated",
       value: kpis.assets_allocated,
       icon: Layers,
       color: "border-status-info/20 text-status-info",
-      bgGradient: "from-status-info/5 to-transparent"
+      bgGradient: "from-status-info/5 to-transparent",
+      link: "/assets?status=Allocated"
     },
     {
       label: "Maintenance Today",
       value: kpis.maintenance_today,
       icon: Wrench,
       color: "border-status-warning/20 text-status-warning",
-      bgGradient: "from-status-warning/5 to-transparent"
+      bgGradient: "from-status-warning/5 to-transparent",
+      link: "/maintenance"
     },
     {
       label: "Active Bookings",
       value: kpis.active_bookings,
       icon: CalendarCheck,
       color: "border-accent-purple/20 text-accent-purple",
-      bgGradient: "from-accent-purple/5 to-transparent"
+      bgGradient: "from-accent-purple/5 to-transparent",
+      link: "/bookings"
     },
     {
       label: "Pending Transfers",
       value: kpis.pending_transfers,
       icon: RefreshCw,
       color: "border-accent-purple/10 text-accent-purple/80",
-      bgGradient: "from-accent-purple/5 to-transparent"
+      bgGradient: "from-accent-purple/5 to-transparent",
+      link: "/allocations"
     },
     {
       label: "Upcoming Returns",
       value: kpis.upcoming_returns,
       icon: CalendarCheck,
       color: "border-border-primary text-text-secondary",
-      bgGradient: "from-bg-secondary to-transparent"
+      bgGradient: "from-bg-secondary to-transparent",
+      link: "/allocations?status=Active"
     },
     {
       label: "Overdue Returns",
@@ -77,7 +83,8 @@ export default function Dashboard() {
       color: kpis.overdue_returns > 0 
         ? "border-status-danger/25 text-status-danger animate-pulse" 
         : "border-border-primary text-text-secondary",
-      bgGradient: kpis.overdue_returns > 0 ? "from-status-danger/5 to-transparent" : "from-bg-secondary to-transparent"
+      bgGradient: kpis.overdue_returns > 0 ? "from-status-danger/5 to-transparent" : "from-bg-secondary to-transparent",
+      link: "/allocations?status=Overdue"
     }
   ];
 
@@ -99,31 +106,39 @@ export default function Dashboard() {
         {cards.map((card, idx) => {
           const Icon = card.icon;
           return (
-            <motion.div
-              key={idx}
-              whileHover={{ y: -1 }}
-              transition={{ duration: 0.15 }}
-              className={`bg-bg-card p-5 rounded-xl border border-border-primary relative overflow-hidden group shadow-sm flex flex-col justify-between`}
+            <Link 
+              to={card.link} 
+              key={idx} 
+              className="block hover:no-underline select-none"
             >
-              {/* Soft Gradient Overlay */}
-              <div className={`absolute inset-0 bg-gradient-to-br ${card.bgGradient} opacity-30 pointer-events-none`} />
+              <motion.div
+                whileHover={{ y: -1 }}
+                transition={{ duration: 0.15 }}
+                className={`bg-bg-card p-5 rounded-xl border border-border-primary relative overflow-hidden group shadow-sm flex flex-col justify-between h-full`}
+              >
+                {/* Soft Gradient Overlay */}
+                <div className={`absolute inset-0 bg-gradient-to-br ${card.bgGradient} opacity-30 pointer-events-none`} />
 
-              <div className="flex justify-between items-start z-10">
-                <p className="text-[10px] font-semibold text-text-muted uppercase tracking-wider">{card.label}</p>
-                <div className={`p-1.5 rounded-lg border bg-bg-secondary ${card.color}`}>
-                  <Icon className="h-4 w-4" />
+                <div className="flex justify-between items-start z-10">
+                  <p className="text-[10px] font-semibold text-text-muted uppercase tracking-wider">{card.label}</p>
+                  <div className={`p-1.5 rounded-lg border bg-bg-secondary ${card.color}`}>
+                    <Icon className="h-4 w-4" />
+                  </div>
                 </div>
-              </div>
-              <div className="mt-4 z-10">
-                <h3 className="text-2xl font-light tracking-tight text-text-primary">
-                  {loading ? (
-                    <span className="block h-6 w-8 bg-border-primary/45 rounded animate-pulse" />
-                  ) : (
-                    card.value
-                  )}
-                </h3>
-              </div>
-            </motion.div>
+                <div className="mt-4 z-10 flex justify-between items-end">
+                  <h3 className="text-2xl font-light tracking-tight text-text-primary">
+                    {loading ? (
+                      <span className="block h-6 w-8 bg-border-primary/45 rounded animate-pulse" />
+                    ) : (
+                      card.value
+                    )}
+                  </h3>
+                  <span className="text-[9px] text-text-muted opacity-0 group-hover:opacity-100 transition-opacity font-semibold flex items-center gap-0.5">
+                    View Details &rarr;
+                  </span>
+                </div>
+              </motion.div>
+            </Link>
           );
         })}
       </div>
