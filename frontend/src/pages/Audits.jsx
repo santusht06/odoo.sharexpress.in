@@ -30,11 +30,13 @@ import Input from "../components/ui/Input";
 import Drawer from "../components/ui/Drawer";
 import StatusBadge from "../components/ui/StatusBadge";
 import ConfirmModal from "../components/ui/ConfirmModal";
-import { TableContainer, Table, Thead, Tbody, Tr, Th, Td, EmptyState } from "../components/ui/TableComponents";
+import { TableContainer, Table, Thead, Tbody, Tr, Th, Td, EmptyState, TableSkeleton } from "../components/ui/TableComponents";
+import { Skeleton } from "../components/ui/Skeleton";
 
 export default function Audits() {
   const dispatch = useDispatch();
-  const { items: cycles } = useSelector((state) => state.audits);
+  const { items: cycles, loading } = useSelector((state) => state.audits);
+  const [reportLoading, setReportLoading] = useState(false);
   const { items: departments } = useSelector((state) => state.departments);
   const { items: employees } = useSelector((state) => state.employees);
   const { user } = useSelector((state) => state.auth);
@@ -102,6 +104,7 @@ export default function Audits() {
   const handleSelectCycle = (cycle) => {
     setActiveCycle(cycle);
     setActiveTab("checklist");
+    setReportLoading(true);
     dispatch(fetchDiscrepancyReport(cycle.cycle_id)).unwrap()
       .then((data) => {
         setDiscrepancyReport(data);
@@ -109,11 +112,15 @@ export default function Audits() {
       .catch((err) => {
         toast.error("Failed to load audit discrepancy report: " + err);
         setDiscrepancyReport(null);
+      })
+      .finally(() => {
+        setReportLoading(false);
       });
   };
 
   const handleRecordEntry = (assetId, result) => {
     if (!activeCycle) return;
+    setReportLoading(true);
     dispatch(recordAuditEntry({
       cycleId: activeCycle.cycle_id,
       data: {
@@ -128,9 +135,15 @@ export default function Audits() {
         dispatch(fetchDiscrepancyReport(activeCycle.cycle_id)).unwrap()
           .then((data) => {
             setDiscrepancyReport(data);
+          })
+          .finally(() => {
+            setReportLoading(false);
           });
       })
-      .catch((err) => toast.error(err));
+      .catch((err) => {
+        toast.error(err);
+        setReportLoading(false);
+      });
   };
 
   const handleCloseCycleClick = (cycleId) => {
@@ -140,6 +153,7 @@ export default function Audits() {
 
   const executeCloseCycle = () => {
     if (!cycleToClose) return;
+    setReportLoading(true);
     dispatch(closeAuditCycle(cycleToClose)).unwrap()
       .then(() => {
         toast.success("Audit cycle closed. Asset directory records updated.");
@@ -155,9 +169,15 @@ export default function Audits() {
         dispatch(fetchDiscrepancyReport(cycleToClose)).unwrap()
           .then((data) => {
             setDiscrepancyReport(data);
+          })
+          .finally(() => {
+            setReportLoading(false);
           });
       })
-      .catch((err) => toast.error(err));
+      .catch((err) => {
+        toast.error(err);
+        setReportLoading(false);
+      });
   };
 
   // Compute live statistics from the loaded discrepancy report
@@ -211,7 +231,13 @@ export default function Audits() {
           </div>
 
           <div className="space-y-2.5 max-h-[520px] overflow-y-auto pr-1">
-            {cycles.length === 0 ? (
+            {loading ? (
+              <div className="space-y-3">
+                <Skeleton className="h-22 w-full rounded-xl" />
+                <Skeleton className="h-22 w-full rounded-xl" />
+                <Skeleton className="h-22 w-full rounded-xl" />
+              </div>
+            ) : cycles.length === 0 ? (
               <div className="text-center py-10 border border-dashed border-border-primary rounded-xl">
                 <ClipboardCheck className="h-6 w-6 text-text-muted/40 mx-auto mb-2" />
                 <p className="text-xs text-text-muted">No audit cycles started yet</p>
@@ -259,7 +285,27 @@ export default function Audits() {
 
         {/* Right Card: Dynamic Unified Cycle Inspector */}
         <div className="bg-bg-card border border-border-primary rounded-xl p-5 lg:col-span-2 min-h-[500px]">
-          {activeCycle && discrepancyReport ? (
+          {reportLoading ? (
+            <div className="space-y-6">
+              {/* Header skeleton */}
+              <div className="flex items-center justify-between pb-4 border-b border-border-primary">
+                <div className="space-y-2 w-1/3">
+                  <Skeleton className="h-5 w-full rounded" />
+                  <Skeleton className="h-3 w-2/3 rounded" />
+                </div>
+                <Skeleton className="h-7 w-20 rounded-lg" />
+              </div>
+              {/* Stats metric cards skeletons */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                <Skeleton className="h-16 w-full rounded-xl" />
+                <Skeleton className="h-16 w-full rounded-xl" />
+                <Skeleton className="h-16 w-full rounded-xl" />
+                <Skeleton className="h-16 w-full rounded-xl" />
+              </div>
+              {/* Table skeleton */}
+              <TableSkeleton rows={4} cols={4} />
+            </div>
+          ) : activeCycle && discrepancyReport ? (
             <div className="space-y-6">
               
               {/* Inspector Header */}

@@ -6,7 +6,7 @@ import { toast } from "react-toastify";
 import { Users, Shield, RefreshCw } from "lucide-react";
 import Button from "../components/ui/Button";
 import StatusBadge from "../components/ui/StatusBadge";
-import { TableContainer, Table, Thead, Tbody, Tr, Th, Td, EmptyState } from "../components/ui/TableComponents";
+import { TableContainer, Table, Thead, Tbody, Tr, Th, Td, EmptyState, TableSkeleton } from "../components/ui/TableComponents";
 
 export default function Employees() {
   const dispatch = useDispatch();
@@ -42,7 +42,9 @@ export default function Employees() {
       </div>
 
       <TableContainer>
-        {employees.length === 0 ? (
+        {loading ? (
+          <TableSkeleton rows={5} cols={5} />
+        ) : employees.length === 0 ? (
           <EmptyState 
             title="No staff employees found" 
             description="The staff directory lists no active user accounts currently." 

@@ -9,11 +9,11 @@ import Input from "../components/ui/Input";
 import Drawer from "../components/ui/Drawer";
 import StatusBadge from "../components/ui/StatusBadge";
 import ConfirmModal from "../components/ui/ConfirmModal";
-import { TableContainer, Table, Thead, Tbody, Tr, Th, Td, EmptyState } from "../components/ui/TableComponents";
+import { TableContainer, Table, Thead, Tbody, Tr, Th, Td, EmptyState, TableSkeleton } from "../components/ui/TableComponents";
 
 export default function Bookings() {
   const dispatch = useDispatch();
-  const { items: bookings } = useSelector((state) => state.bookings);
+  const { items: bookings, loading } = useSelector((state) => state.bookings);
   const { items: bookableAssets } = useSelector((state) => state.assets);
   const { user } = useSelector((state) => state.auth);
 
@@ -262,7 +262,9 @@ export default function Bookings() {
         {/* Right Side: Bookings Table (Filtered) */}
         <div className="lg:col-span-2 space-y-4">
           <TableContainer>
-            {filteredBookings.length === 0 ? (
+            {loading ? (
+              <TableSkeleton rows={4} cols={5} />
+            ) : filteredBookings.length === 0 ? (
               <EmptyState 
                 title={selectedDate ? "No bookings on this day" : "No bookings scheduled"} 
                 description="No staff members have currently reserved shared company infrastructure slots."

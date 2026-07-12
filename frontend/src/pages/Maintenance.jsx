@@ -16,12 +16,12 @@ import Button from "../components/ui/Button";
 import Input from "../components/ui/Input";
 import Drawer from "../components/ui/Drawer";
 import StatusBadge from "../components/ui/StatusBadge";
-import { TableContainer, Table, Thead, Tbody, Tr, Th, Td, EmptyState } from "../components/ui/TableComponents";
+import { TableContainer, Table, Thead, Tbody, Tr, Th, Td, EmptyState, TableSkeleton } from "../components/ui/TableComponents";
 import ImageModal from "../components/ui/ImageModal";
 
 export default function Maintenance() {
   const dispatch = useDispatch();
-  const { items: requests } = useSelector((state) => state.maintenance);
+  const { items: requests, loading } = useSelector((state) => state.maintenance);
   const { items: assets } = useSelector((state) => state.assets);
   const { user } = useSelector((state) => state.auth);
 
@@ -171,7 +171,9 @@ export default function Maintenance() {
 
       {/* Tickets List */}
       <TableContainer>
-        {requests.length === 0 ? (
+        {loading ? (
+          <TableSkeleton rows={5} cols={6} />
+        ) : requests.length === 0 ? (
           <EmptyState 
             title="No maintenance requests" 
             description="There are currently no logged repair tickets or hardware incidents."
