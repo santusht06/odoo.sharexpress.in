@@ -25,8 +25,8 @@ class DashboardController:
         assets_allocated = await db.assets.count_documents({"status": "Allocated"})
         
         # 2. Maintenance requests count (Under maintenance / today)
-        maintenance_today = await db.maintenance.count_documents({"status": "In Progress"})
-        maintenance_pending = await db.maintenance.count_documents({"status": "Pending"})
+        maintenance_today = await db.maintenance.count_documents({"status": "Under Repair"})
+        maintenance_pending = await db.maintenance.count_documents({"status": "Pending Approval"})
 
         # 3. Active Bookings
         now = datetime.utcnow()

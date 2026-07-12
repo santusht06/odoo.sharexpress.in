@@ -26,7 +26,7 @@ class MaintenanceController:
             "priority": maint_in.priority,
             "assigned_technician": None,
             "resolution_notes": None,
-            "status": "Pending",
+            "status": "Pending Approval",
             "photos": maint_in.photos or [],
             "created_at": datetime.utcnow(),
             "approved_at": None,
@@ -83,7 +83,7 @@ class MaintenanceController:
         if not req:
             raise HTTPException(status_code=404, detail="Maintenance request not found")
 
-        if req.get("status") != "Pending":
+        if req.get("status") != "Pending Approval":
             raise HTTPException(status_code=400, detail="Only Pending requests can be approved/rejected")
 
         status_str = "Approved" if approve else "Rejected"
@@ -124,7 +124,7 @@ class MaintenanceController:
         if not req:
             raise HTTPException(status_code=404, detail="Maintenance request not found")
 
-        if req.get("status") not in ["Approved", "In Progress"]:
+        if req.get("status") not in ["Approved", "Under Repair"]:
             raise HTTPException(status_code=400, detail="Cannot assign technician for this status")
 
         await db.maintenance.update_one(
@@ -132,7 +132,7 @@ class MaintenanceController:
             {
                 "$set": {
                     "assigned_technician": assign_in.technician_name,
-                    "status": "In Progress"
+                    "status": "Under Repair"
                 }
             }
         )
@@ -146,8 +146,8 @@ class MaintenanceController:
         if not req:
             raise HTTPException(status_code=404, detail="Maintenance request not found")
 
-        if req.get("status") != "In Progress":
-            raise HTTPException(status_code=400, detail="Only requests In Progress can be marked resolved")
+        if req.get("status") != "Under Repair":
+            raise HTTPException(status_code=400, detail="Only requests Under Repair can be marked resolved")
 
         # Resolve maintenance
         await db.maintenance.update_one(
