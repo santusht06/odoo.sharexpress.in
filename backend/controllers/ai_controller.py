@@ -17,6 +17,17 @@ class AIController:
             # Decide what collections to search based on prompt intent
             search_all = True
             
+            # Query Users / Staff Directory
+            if search_all or any(k in query_lower for k in ["user", "employee", "staff", "member", "person", "people", "name", "en23cs301927"]):
+                users_cursor = db.users.find({"deleted_at": None}, {"_id": 0}).limit(50)
+                users = await users_cursor.to_list(length=50)
+                if users:
+                    users_str = "\n".join([
+                        f"- Name: {u.get('name')} | Email: {u.get('email')} | Role: {u.get('role')} | Active: {u.get('is_active')}"
+                        for u in users
+                    ])
+                    context_parts.append(f"### Live Employees / Users / Staff Directory:\n{users_str}")
+
             # Query Assets
             if search_all or any(k in query_lower for k in ["asset", "device", "laptop", "monitor", "host", "keyboard", "mouse", "tag", "hardware", "spec"]):
                 assets_cursor = db.assets.find({"deleted_at": None}, {"_id": 0}).limit(30)
