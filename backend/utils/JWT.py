@@ -32,6 +32,7 @@ def GenerateToken(user_id: str, response: Response) -> bool:
             samesite="none" if is_prod else "lax",
             domain=".sharexpress.in" if is_prod else None,
             path="/",
+            max_age=JWT_EXPIRES * 24 * 3600,
         )
 
         return True
