@@ -89,11 +89,24 @@ class AuthController:
                         "deleted_at": None,
                     }
                 )
-                await log_activity(user_id, "SIGNUP", "USER", user_id, details=f"Signed up via OTP with role {role}")
+                user_doc = await db.users.find_one({"user_id": user_id})
+                safe_user = {
+                    "user_id": user_doc.get("user_id"),
+                    "email": user_doc.get("email"),
+                    "picture": user_doc.get("picture"),
+                    "user_name": user_doc.get("name"),
+                    "auth_provider": user_doc.get("auth_provider"),
+                    "role": user_doc.get("role", "EMPLOYEE"),
+                    "department_id": user_doc.get("department_id"),
+                    "is_verified": user_doc.get("is_verified"),
+                    "is_active": user_doc.get("is_active"),
+                    "created_at": user_doc.get("created_at").isoformat() if isinstance(user_doc.get("created_at"), datetime) else user_doc.get("created_at"),
+                }
                 GenerateToken(user_id, response)
                 return {
                     "message": "User created and verified successfully",
                     "success": True,
+                    "user": safe_user
                 }
 
             if not user_exists.get("is_verified"):
@@ -120,9 +133,28 @@ class AuthController:
                     detail="Account is inactive. Please contact support.",
                 )
 
-            GenerateToken(user_exists["user_id"], response)
-            await log_activity(user_exists["user_id"], "LOGIN", "USER", user_exists["user_id"], details="Logged in via OTP")
-            return {"message": "Login successful", "success": True}
+            user_id = user_exists["user_id"]
+            user_doc = await db.users.find_one({"user_id": user_id})
+            safe_user = {
+                "user_id": user_doc.get("user_id"),
+                "email": user_doc.get("email"),
+                "picture": user_doc.get("picture"),
+                "user_name": user_doc.get("name"),
+                "auth_provider": user_doc.get("auth_provider"),
+                "role": user_doc.get("role", "EMPLOYEE"),
+                "department_id": user_doc.get("department_id"),
+                "is_verified": user_doc.get("is_verified"),
+                "is_active": user_doc.get("is_active"),
+                "created_at": user_doc.get("created_at").isoformat() if isinstance(user_doc.get("created_at"), datetime) else user_doc.get("created_at"),
+            }
+
+            GenerateToken(user_id, response)
+            await log_activity(user_id, "LOGIN", "USER", user_id, details="Logged in via OTP")
+            return {
+                "message": "Login successful",
+                "success": True,
+                "user": safe_user
+            }
 
         except HTTPException:
             raise

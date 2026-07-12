@@ -33,4 +33,3 @@ async def get_discrepancy_report(cycle_id: str, user=Depends(require_any_authent
 @router.post("/{cycle_id}/close")
 async def close_audit_cycle(cycle_id: str, user=Depends(require_admin)):
     return await AuditController.close_audit_cycle(cycle_id, user["user_id"])
- Amin only endpoints are strictly protected by guards.

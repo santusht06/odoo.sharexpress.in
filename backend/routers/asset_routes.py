@@ -36,3 +36,16 @@ async def update_asset(asset_id: str, asset_in: UpdateAsset, user=Depends(requir
 @router.patch("/{asset_id}/status")
 async def update_status(asset_id: str, status_in: UpdateAssetStatus, user=Depends(require_asset_manager)):
     return await AssetController.update_status(asset_id, status_in, user["user_id"])
+
+
+from fastapi import UploadFile, File
+from utils.cloudinary_service import upload_file_to_cloudinary
+
+@router.post("/upload")
+async def upload_asset_file(
+    file: UploadFile = File(...),
+    user=Depends(require_any_authenticated)
+):
+    contents = await file.read()
+    cloudinary_result = await upload_file_to_cloudinary(contents, file.filename)
+    return {"success": True, "url": cloudinary_result["secure_url"], "public_id": cloudinary_result["public_id"]}

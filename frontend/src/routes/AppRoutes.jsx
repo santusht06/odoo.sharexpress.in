@@ -3,6 +3,7 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import ProtectedRoute from "../components/ProtectedRoute";
 import DashboardLayout from "../helpers/DashboardLayout";
 import Signin from "../pages/Signin";
+import Home from "../pages/Home";
 import Dashboard from "../pages/Dashboard";
 import OrganizationSetup from "../pages/OrganizationSetup";
 import Employees from "../pages/Employees";
@@ -16,7 +17,8 @@ import Reports from "../pages/Reports";
 export default function AppRoutes() {
   return (
     <Routes>
-      {/* Public auth screens */}
+      {/* Public landing and auth screens */}
+      <Route path="/" element={<Home />} />
       <Route path="/signin" element={<Signin />} />
 
       {/* Main app paths wrapped in a shared layout with role-based routing */}
