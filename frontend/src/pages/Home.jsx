@@ -208,9 +208,11 @@ export default function Home() {
       {/* ── Navigation Header ───────────────────────────────────────────── */}
       <header className="bg-bg-primary/80 backdrop-blur-md border-b border-border-primary py-3.5 px-6 sm:px-12 flex justify-between items-center sticky top-0 z-50">
         <div className="flex items-center gap-2">
-          <div className="p-1.5 bg-accent-purple/10 text-accent-purple rounded-lg border border-accent-purple/20">
-            <Boxes className="h-5 w-5" />
-          </div>
+          <img
+            src="/logo.png"
+            alt="AssetFlow Logo"
+            className="h-5 w-5 object-contain"
+          />
           <span className="text-sm font-semibold tracking-tight text-text-primary">
             AssetFlow
           </span>
@@ -657,9 +659,11 @@ export default function Home() {
       <footer className="mt-auto bg-bg-secondary text-text-muted py-10 px-6 sm:px-12 border-t border-border-primary">
         <div className="max-w-6xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-6">
           <div className="flex items-center gap-2">
-            <div className="p-1 bg-accent-purple text-white rounded">
-              <Boxes className="h-4 w-4" />
-            </div>
+            <img
+              src="/logo.png"
+              alt="AssetFlow Logo"
+              className="h-4.5 w-4.5 object-contain"
+            />
             <span className="text-xs font-semibold text-text-primary tracking-tight">
               AssetFlow
             </span>

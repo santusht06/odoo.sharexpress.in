@@ -79,9 +79,11 @@ export default function Signin() {
         className="max-w-md w-full space-y-8 bg-bg-card p-8 border border-border-primary rounded-2xl shadow-premium dark:shadow-premium-dark relative z-10"
       >
         <div className="text-center">
-          <div className="inline-flex items-center justify-center p-2 bg-accent-purple/10 text-accent-purple rounded-xl border border-accent-purple/20 mb-4.5">
-            <Boxes className="h-6 w-6" />
-          </div>
+          <img
+            src="/logo.png"
+            alt="AssetFlow Logo"
+            className="h-10 w-10 object-contain mx-auto mb-4.5"
+          />
           <h2 className="text-xl font-medium tracking-tight text-text-primary">
             Sign in to AssetFlow
           </h2>

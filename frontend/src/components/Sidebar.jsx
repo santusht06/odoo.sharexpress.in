@@ -59,9 +59,11 @@ export default function Sidebar() {
       {/* Workspace / Header */}
       <div className="flex h-14 items-center justify-between border-b border-border-primary px-4.5">
         <div className="flex items-center gap-2 overflow-hidden">
-          <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-accent-purple text-white shadow-sm shrink-0">
-            <Boxes className="h-4.5 w-4.5" />
-          </div>
+          <img
+            src="/logo.png"
+            alt="AssetFlow Logo"
+            className="h-7 w-7 object-contain shrink-0"
+          />
           {!isCollapsed && (
             <div className="truncate">
               <h1 className="text-xs font-semibold text-text-primary tracking-tight leading-none">AssetFlow</h1>
