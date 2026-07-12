@@ -76,6 +76,31 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     overflow-x: hidden;
+    position: relative;
+    min-height: 100vh;
+  }
+
+  body::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image: 
+      linear-gradient(rgba(24, 24, 27, 0.02) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(24, 24, 27, 0.02) 1px, transparent 1px);
+    background-size: 60px 60px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .dark body::before {
+    background-image: 
+      linear-gradient(rgba(255, 255, 255, 0.012) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.012) 1px, transparent 1px);
+  }
+
+  main, aside, nav, div {
+    position: relative;
+    z-index: 2;
   }
 }
 
@@ -158,3 +183,41 @@
 .dark .Toastify__toast {
   box-shadow: var(--shadow-premium-dark) !important;
 }
+
+/* Premium glimmer hover cards (Linear/Jira theme) */
+.glimmer-card {
+  position: relative;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.glimmer-card:hover {
+  border-color: rgba(94, 106, 210, 0.3) !important;
+  box-shadow: 0 0 20px rgba(94, 106, 210, 0.05);
+}
+.dark .glimmer-card:hover {
+  border-color: rgba(94, 106, 210, 0.45) !important;
+  box-shadow: 0 0 25px rgba(94, 106, 210, 0.1);
+}
+
+/* Micro-interactions: Table Rows hover glow */
+tr {
+  transition: background-color 120ms ease;
+}
+tbody tr:hover {
+  background-color: var(--secondary-bg) !important;
+}
+
+/* Cosmic accent glow spot */
+.cosmic-glow {
+  position: absolute;
+  top: -10%;
+  right: -5%;
+  width: 300px;
+  height: 300px;
+  background: radial-gradient(circle, rgba(94, 106, 210, 0.08) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 1;
+}
+.dark .cosmic-glow {
+  background: radial-gradient(circle, rgba(94, 106, 210, 0.15) 0%, transparent 70%);
+}
+

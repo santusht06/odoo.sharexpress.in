@@ -89,7 +89,8 @@ export default function Dashboard() {
   ];
 
   return (
-    <div className="space-y-8 text-text-primary">
+    <div className="space-y-8 text-text-primary relative">
+      <div className="cosmic-glow" />
       {/* Welcome header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
@@ -114,7 +115,7 @@ export default function Dashboard() {
               <motion.div
                 whileHover={{ y: -1 }}
                 transition={{ duration: 0.15 }}
-                className={`bg-bg-card p-5 rounded-xl border border-border-primary relative overflow-hidden group shadow-sm flex flex-col justify-between h-full`}
+                className={`bg-bg-card p-5 rounded-xl border border-border-primary relative overflow-hidden group shadow-sm flex flex-col justify-between h-full glimmer-card`}
               >
                 {/* Soft Gradient Overlay */}
                 <div className={`absolute inset-0 bg-gradient-to-br ${card.bgGradient} opacity-30 pointer-events-none`} />
@@ -145,7 +146,7 @@ export default function Dashboard() {
 
       {/* Quick Actions & Profiles */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="bg-bg-card border border-border-primary rounded-xl p-6 lg:col-span-2 space-y-4 shadow-sm">
+        <div className="bg-bg-card border border-border-primary rounded-xl p-6 lg:col-span-2 space-y-4 shadow-sm glimmer-card">
           <div className="border-b border-border-primary/80 pb-3 flex items-center justify-between">
             <h3 className="text-xs font-semibold text-text-primary uppercase tracking-wider">
               Quick Shortcuts
@@ -192,7 +193,7 @@ export default function Dashboard() {
         </div>
 
         {/* User Card info */}
-        <div className="bg-bg-card border border-border-primary rounded-xl p-6 flex flex-col justify-between shadow-sm">
+        <div className="bg-bg-card border border-border-primary rounded-xl p-6 flex flex-col justify-between shadow-sm glimmer-card">
           <div>
             <div className="border-b border-border-primary/80 pb-3">
               <h3 className="text-xs font-semibold text-text-primary uppercase tracking-wider">
