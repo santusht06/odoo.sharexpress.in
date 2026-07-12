@@ -50,3 +50,20 @@ async def get_logs(
     total = await db.activity_logs.count_documents(query)
     return {"success": True, "logs": logs, "total": total}
 
+
+from utils.JWT import check_auth_middleware
+
+@router.get("/my-history")
+async def get_my_logs(
+    limit: int = Query(5, ge=1, le=20),
+    user: dict = Depends(check_auth_middleware)
+):
+    query = {"user_id": user["user_id"]}
+    cursor = db.activity_logs.find(query, {"_id": 0}).sort("timestamp", -1).limit(limit)
+    logs = []
+    async for doc in cursor:
+        doc["user_name"] = user.get("name")
+        doc["user_email"] = user.get("email")
+        logs.append(_serialize_value(doc))
+    return {"success": True, "logs": logs}
+

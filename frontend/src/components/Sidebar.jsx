@@ -148,7 +148,11 @@ export default function Sidebar() {
 
         {/* User Card */}
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2.5 overflow-hidden">
+          <div 
+            onClick={() => navigate("/profile")}
+            className="flex items-center gap-2.5 overflow-hidden cursor-pointer hover:opacity-80 transition-opacity"
+            title="View Profile"
+          >
             <div className="flex h-7 w-7 items-center justify-center rounded-full bg-accent-purple/10 text-accent-purple font-semibold text-xs border border-accent-purple/20 shrink-0 select-none">
               {user?.user_name?.charAt(0).toUpperCase() || "U"}
             </div>

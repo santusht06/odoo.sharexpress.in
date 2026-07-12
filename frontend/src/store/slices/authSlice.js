@@ -119,6 +119,7 @@ const authSlice = createSlice({
       .addCase(updateUserProfile.fulfilled, (state, action) => {
         if (state.user) {
           state.user.user_name = action.meta.arg;
+          state.user.require_profile_setup = false;
         }
       })
       .addCase(logoutUser.fulfilled, (state) => {

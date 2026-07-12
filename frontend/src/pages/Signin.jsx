@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { sendOTP, verifyOTP, getCurrentUser } from "../store/slices/authSlice";
+import { sendOTP, verifyOTP, getCurrentUser, updateUserProfile } from "../store/slices/authSlice";
 import { toast } from "react-toastify";
 import { API } from "../api/api";
 import { Boxes, Mail, ShieldCheck, ArrowRight } from "lucide-react";
@@ -18,11 +18,16 @@ export default function Signin() {
   const [email, setEmail] = useState("");
   const [transactionID, setTransactionID] = useState(null);
   const [otp, setOtp] = useState("");
+  const [fullName, setFullName] = useState("");
 
   useEffect(() => {
     document.title = "Sign In — AssetFlow";
     if (user) {
-      navigate("/dashboard");
+      if (user.require_profile_setup) {
+        setStep("profile_setup");
+      } else {
+        navigate("/dashboard");
+      }
     }
   }, [user, navigate]);
 
@@ -57,7 +62,6 @@ export default function Signin() {
 
       toast.success("Signed in successfully!");
       dispatch(getCurrentUser());
-      navigate("/dashboard");
     } catch (err) {
       toast.error(err || "Verification code is incorrect");
     }
@@ -65,6 +69,18 @@ export default function Signin() {
 
   const handleGoogleSign = () => {
     window.location.href = `${API}/auth/google/login`;
+  };
+
+  const handleCompleteProfile = async (e) => {
+    e.preventDefault();
+    if (!fullName.trim()) return;
+
+    try {
+      await dispatch(updateUserProfile(fullName.trim())).unwrap();
+      toast.success("Profile setup complete!");
+    } catch (err) {
+      toast.error(err || "Failed to complete profile setup");
+    }
   };
 
   return (
@@ -143,7 +159,7 @@ export default function Signin() {
                 <span>Sign in with Google</span>
               </Button>
             </motion.form>
-          ) : (
+          ) : step === "otp" ? (
             <motion.form 
               key="otp-step"
               initial={{ opacity: 0, x: 10 }}
@@ -189,6 +205,43 @@ export default function Signin() {
                   Change Email Address
                 </button>
               </div>
+            </motion.form>
+          ) : (
+            <motion.form 
+              key="profile-setup-step"
+              initial={{ opacity: 0, x: 10 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -10 }}
+              transition={{ duration: 0.15 }}
+              className="space-y-6" 
+              onSubmit={handleCompleteProfile}
+            >
+              <div className="space-y-2 text-center">
+                <p className="text-xs text-text-secondary leading-relaxed font-medium">
+                  Welcome to AssetFlow! <br />
+                  Please complete your profile by entering your name.
+                </p>
+              </div>
+
+              <Input
+                label="Your Full Name"
+                id="full-name"
+                type="text"
+                required
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+                placeholder="e.g. Alice Smith"
+                autoFocus
+              />
+
+              <Button
+                type="submit"
+                variant="primary"
+                disabled={loading}
+                className="w-full py-2.5"
+              >
+                {loading ? "Completing Setup..." : "Complete Setup"}
+              </Button>
             </motion.form>
           )}
         </AnimatePresence>

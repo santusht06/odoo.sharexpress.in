@@ -16,6 +16,7 @@ const OrganizationSetup = lazy(() => import("../pages/OrganizationSetup"));
 const Employees = lazy(() => import("../pages/Employees"));
 const Reports = lazy(() => import("../pages/Reports"));
 const Logs = lazy(() => import("../pages/Logs"));
+const Profile = lazy(() => import("../pages/Profile"));
 
 // Premium fallback screen during chunk download
 function PageLoadingFallback() {
@@ -46,6 +47,7 @@ export default function AppRoutes() {
             <Route path="/bookings" element={<Bookings />} />
             <Route path="/maintenance" element={<Maintenance />} />
             <Route path="/audits" element={<Audits />} />
+            <Route path="/profile" element={<Profile />} />
             
             {/* Admin only views */}
             <Route element={<ProtectedRoute allowedRoles={["ADMIN"]} />}>

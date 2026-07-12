@@ -84,6 +84,7 @@ class AuthController:
                         "is_active": True,
                         "is_locked": False,
                         "google_sub": None,
+                        "require_profile_setup": True,
                         "created_at": datetime.utcnow(),
                         "updated_at": datetime.utcnow(),
                         "deleted_at": None,
@@ -100,6 +101,7 @@ class AuthController:
                     "department_id": user_doc.get("department_id"),
                     "is_verified": user_doc.get("is_verified"),
                     "is_active": user_doc.get("is_active"),
+                    "require_profile_setup": user_doc.get("require_profile_setup", False),
                     "created_at": user_doc.get("created_at").isoformat() if isinstance(user_doc.get("created_at"), datetime) else user_doc.get("created_at"),
                 }
                 GenerateToken(user_id, response)
@@ -145,6 +147,7 @@ class AuthController:
                 "department_id": user_doc.get("department_id"),
                 "is_verified": user_doc.get("is_verified"),
                 "is_active": user_doc.get("is_active"),
+                "require_profile_setup": user_doc.get("require_profile_setup", False),
                 "created_at": user_doc.get("created_at").isoformat() if isinstance(user_doc.get("created_at"), datetime) else user_doc.get("created_at"),
             }
 
@@ -225,6 +228,7 @@ class AuthController:
                         "is_verified": True,
                         "is_active": True,
                         "is_locked": False,
+                        "require_profile_setup": False,
                         "created_at": datetime.utcnow(),
                         "updated_at": datetime.utcnow(),
                         "deleted_at": None,
@@ -287,7 +291,13 @@ class AuthController:
 
             result = await db.users.update_one(
                 {"user_id": user_id},
-                {"$set": {"name": name_data.name, "updated_at": datetime.utcnow()}},
+                {
+                    "$set": {
+                        "name": name_data.name,
+                        "require_profile_setup": False,
+                        "updated_at": datetime.utcnow()
+                    }
+                },
             )
 
             if result.matched_count == 0:

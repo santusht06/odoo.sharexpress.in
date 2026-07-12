@@ -68,6 +68,7 @@ async def get_current_user(request: Request):
             "department_name": department_name,
             "is_verified": user.get("is_verified"),
             "is_active": user.get("is_active"),
+            "require_profile_setup": user.get("require_profile_setup", False),
             "created_at": user.get("created_at"),
         }
         return {"success": True, "user": safe_user}
