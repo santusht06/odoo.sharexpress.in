@@ -44,6 +44,7 @@ export default function Audits() {
   const [scopeDept, setScopeDept] = useState("");
   const [scopeLoc, setScopeLoc] = useState("");
   const [selectedAuditors, setSelectedAuditors] = useState([]);
+  const [auditorSearch, setAuditorSearch] = useState("");
 
   const [activeCycle, setActiveCycle] = useState(null);
   const [discrepancyReport, setDiscrepancyReport] = useState(null);
@@ -66,6 +67,11 @@ export default function Audits() {
     e.preventDefault();
     if (!cycleName) return;
 
+    if (selectedAuditors.length === 0) {
+      toast.warn("Please designate at least one staff checker/auditor.");
+      return;
+    }
+
     dispatch(createAuditCycle({
       name: cycleName,
       scope_department: scopeDept || null,
@@ -79,14 +85,18 @@ export default function Audits() {
         setScopeDept("");
         setScopeLoc("");
         setSelectedAuditors([]);
+        setAuditorSearch("");
         refreshData();
       })
       .catch((err) => toast.error(err));
   };
 
-  const handleAuditorChange = (e) => {
-    const values = Array.from(e.target.selectedOptions, option => option.value);
-    setSelectedAuditors(values);
+  const handleToggleAuditor = (userId) => {
+    setSelectedAuditors((prev) =>
+      prev.includes(userId)
+        ? prev.filter((id) => id !== userId)
+        : [...prev, userId]
+    );
   };
 
   const handleSelectCycle = (cycle) => {
@@ -161,6 +171,12 @@ export default function Audits() {
 
   // Filter discrepancies (incidents) list (Verified is excluded, showing only Missing / Damaged / Unverified discrepancies)
   const incidents = discrepancyReport?.discrepancies?.filter(d => d.result !== "Verified") || [];
+
+  // Filter employees for designate auditors list
+  const filteredAuditorsList = employees.filter(e =>
+    e.name.toLowerCase().includes(auditorSearch.toLowerCase()) ||
+    e.email.toLowerCase().includes(auditorSearch.toLowerCase())
+  );
 
   return (
     <div className="space-y-6 text-text-primary">
@@ -520,20 +536,70 @@ export default function Audits() {
             />
           </div>
 
-          <div className="space-y-1.5">
+          <div className="space-y-2.5">
             <label className="block text-[10px] font-semibold text-text-muted uppercase tracking-wider">Designate Scoped Auditors *</label>
-            <select
-              multiple
-              required
-              value={selectedAuditors}
-              onChange={handleAuditorChange}
-              className="w-full bg-bg-secondary border border-border-primary text-xs text-text-primary rounded-lg px-3 py-2.5 focus:border-accent-purple/80 focus:outline-none focus:ring-2 focus:ring-accent-purple/20 transition-all cursor-pointer h-28"
-            >
-              {employees.map((e) => (
-                <option key={e.user_id} value={e.user_id}>{e.name} ({e.email})</option>
-              ))}
-            </select>
-            <p className="text-[9px] text-text-muted font-medium">Hold Cmd/Ctrl keys to choose multiple staff auditors</p>
+            
+            {/* Selected Auditors Pills */}
+            {selectedAuditors.length > 0 && (
+              <div className="flex flex-wrap gap-1.5 p-2 bg-bg-secondary/40 border border-border-primary rounded-xl max-h-24 overflow-y-auto">
+                {selectedAuditors.map(userId => {
+                  const emp = employees.find(e => e.user_id === userId);
+                  if (!emp) return null;
+                  return (
+                    <span 
+                      key={userId} 
+                      className="inline-flex items-center gap-1.5 text-[10px] font-semibold bg-accent-purple/10 text-accent-purple px-2 py-0.5 rounded-full border border-accent-purple/15"
+                    >
+                      {emp.name}
+                      <button 
+                        type="button" 
+                        onClick={() => handleToggleAuditor(userId)}
+                        className="hover:text-status-danger transition-colors cursor-pointer text-xs font-bold leading-none"
+                      >
+                        &times;
+                      </button>
+                    </span>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* Auditor Search Input */}
+            <input 
+              type="text"
+              placeholder="Search checkers by name or email..."
+              value={auditorSearch}
+              onChange={(e) => setAuditorSearch(e.target.value)}
+              className="w-full bg-bg-secondary border border-border-primary text-xs text-text-primary rounded-lg px-3 py-2 focus:border-accent-purple/80 focus:outline-none focus:ring-2 focus:ring-accent-purple/20 transition-all"
+            />
+
+            {/* Checkbox Scroller list */}
+            <div className="border border-border-primary rounded-xl max-h-36 overflow-y-auto p-2 bg-bg-secondary/20 divide-y divide-border-primary/40">
+              {filteredAuditorsList.length === 0 ? (
+                <p className="text-[10px] text-text-muted text-center py-4">No staff matched your query</p>
+              ) : (
+                filteredAuditorsList.map((e) => {
+                  const isChecked = selectedAuditors.includes(e.user_id);
+                  return (
+                    <label 
+                      key={e.user_id} 
+                      className="flex items-center justify-between py-2 px-1.5 cursor-pointer hover:bg-bg-secondary/60 transition-colors rounded-lg select-none text-xs"
+                    >
+                      <div className="flex flex-col">
+                        <span className="font-semibold text-text-primary">{e.name}</span>
+                        <span className="text-[10px] text-text-muted mt-0.5">{e.email}</span>
+                      </div>
+                      <input 
+                        type="checkbox"
+                        checked={isChecked}
+                        onChange={() => handleToggleAuditor(e.user_id)}
+                        className="rounded text-accent-purple focus:ring-accent-purple border-border-primary h-4 w-4 cursor-pointer accent-accent-purple"
+                      />
+                    </label>
+                  );
+                })
+              )}
+            </div>
           </div>
 
           <div className="flex justify-end gap-2 pt-4 border-t border-border-primary">
