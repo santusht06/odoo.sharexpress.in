@@ -79,15 +79,15 @@ class AssetController:
                 {"location": {"$regex": search, "$options": "i"}}
             ]
 
-        cursor = db.assets.find(query)
+        cursor = db.assets.find(query, {"_id": 0})
         assets = []
         async for doc in cursor:
             # Join category name
-            category = await db.categories.find_one({"category_id": doc.get("category_id")})
+            category = await db.categories.find_one({"category_id": doc.get("category_id")}, {"_id": 0})
             doc["category_name"] = category.get("name") if category else "Unknown"
 
             # Join department name
-            dept = await db.departments.find_one({"department_id": doc.get("department_id")})
+            dept = await db.departments.find_one({"department_id": doc.get("department_id")}, {"_id": 0})
             doc["department_name"] = dept.get("name") if dept else "Unassigned"
 
             assets.append(doc)
@@ -95,30 +95,30 @@ class AssetController:
 
     @staticmethod
     async def get_asset_detail(asset_id: str):
-        asset = await db.assets.find_one({"asset_id": asset_id})
+        asset = await db.assets.find_one({"asset_id": asset_id}, {"_id": 0})
         if not asset:
             raise HTTPException(status_code=404, detail="Asset not found")
 
         # Join category details
-        category = await db.categories.find_one({"category_id": asset.get("category_id")})
+        category = await db.categories.find_one({"category_id": asset.get("category_id")}, {"_id": 0})
         asset["category_name"] = category.get("name") if category else "Unknown"
 
         # Join department details
-        dept = await db.departments.find_one({"department_id": asset.get("department_id")})
+        dept = await db.departments.find_one({"department_id": asset.get("department_id")}, {"_id": 0})
         asset["department_name"] = dept.get("name") if dept else "Unassigned"
 
         # Fetch allocation history
-        allocation_cursor = db.allocations.find({"asset_id": asset_id}).sort("allocated_at", -1)
+        allocation_cursor = db.allocations.find({"asset_id": asset_id}, {"_id": 0}).sort("allocated_at", -1)
         allocation_history = []
         async for alloc in allocation_cursor:
-            user = await db.users.find_one({"user_id": alloc.get("allocated_to")})
+            user = await db.users.find_one({"user_id": alloc.get("allocated_to")}, {"_id": 0})
             alloc["allocated_to_name"] = user.get("name") if user else "Unknown User"
             alloc["allocated_to_email"] = user.get("email") if user else ""
             allocation_history.append(alloc)
         asset["allocation_history"] = allocation_history
 
         # Fetch maintenance history
-        maintenance_cursor = db.maintenance.find({"asset_id": asset_id}).sort("created_at", -1)
+        maintenance_cursor = db.maintenance.find({"asset_id": asset_id}, {"_id": 0}).sort("created_at", -1)
         maintenance_history = []
         async for main_req in maintenance_cursor:
             maintenance_history.append(main_req)

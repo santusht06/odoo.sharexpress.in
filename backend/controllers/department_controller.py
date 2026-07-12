@@ -53,7 +53,7 @@ class DepartmentController:
 
     @staticmethod
     async def list_departments():
-        cursor = db.departments.find()
+        cursor = db.departments.find({}, {"_id": 0})
         depts = []
         async for doc in cursor:
             # Join head info

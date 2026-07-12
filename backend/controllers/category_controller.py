@@ -30,7 +30,7 @@ class CategoryController:
 
     @staticmethod
     async def list_categories():
-        cursor = db.categories.find()
+        cursor = db.categories.find({}, {"_id": 0})
         cats = []
         async for doc in cursor:
             cats.append(doc)
