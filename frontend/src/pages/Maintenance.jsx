@@ -244,7 +244,7 @@ export default function Maintenance() {
                   </Td>
                   <Td className="text-right">
                     <div className="flex justify-end gap-1.5">
-                      {["ADMIN", "ASSET_MANAGER"].includes(user?.role) && req.status === "Pending Approval" && (
+                      {["ADMIN", "ASSET_MANAGER"].includes(user?.role) && ["Pending Approval", "Pending"].includes(req.status) && (
                         <>
                           <button
                             onClick={() => handleApprove(req.request_id)}
@@ -274,7 +274,7 @@ export default function Maintenance() {
                         </Button>
                       )}
 
-                      {["ADMIN", "ASSET_MANAGER"].includes(user?.role) && req.status === "Under Repair" && (
+                      {["ADMIN", "ASSET_MANAGER"].includes(user?.role) && ["Under Repair", "In Progress"].includes(req.status) && (
                         <Button
                           variant="ghost"
                           size="sm"
