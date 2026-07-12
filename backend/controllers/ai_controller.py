@@ -128,6 +128,7 @@ class AIController:
                                     {"role": "system", "content": system_instruction},
                                     {"role": "user", "content": prompt}
                                 ],
+                                "response_format": {"type": "json_object"},
                                 "temperature": 0.2
                             }
                         )
@@ -153,7 +154,8 @@ class AIController:
                                     "parts": [{"text": system_instruction}]
                                 },
                                 "generationConfig": {
-                                    "temperature": 0.2
+                                    "temperature": 0.2,
+                                    "responseMimeType": "application/json"
                                 }
                             }
                         )
