@@ -76,31 +76,6 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     overflow-x: hidden;
-    position: relative;
-    min-height: 100vh;
-  }
-
-  body::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    background-image: 
-      linear-gradient(rgba(24, 24, 27, 0.02) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(24, 24, 27, 0.02) 1px, transparent 1px);
-    background-size: 60px 60px;
-    pointer-events: none;
-    z-index: 0;
-  }
-
-  .dark body::before {
-    background-image: 
-      linear-gradient(rgba(255, 255, 255, 0.012) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(255, 255, 255, 0.012) 1px, transparent 1px);
-  }
-
-  main, aside, nav, div {
-    position: relative;
-    z-index: 2;
   }
 }
 
@@ -206,18 +181,5 @@ tbody tr:hover {
   background-color: var(--secondary-bg) !important;
 }
 
-/* Cosmic accent glow spot */
-.cosmic-glow {
-  position: absolute;
-  top: -10%;
-  right: -5%;
-  width: 300px;
-  height: 300px;
-  background: radial-gradient(circle, rgba(94, 106, 210, 0.08) 0%, transparent 70%);
-  pointer-events: none;
-  z-index: 1;
-}
-.dark .cosmic-glow {
-  background: radial-gradient(circle, rgba(94, 106, 210, 0.15) 0%, transparent 70%);
-}
+
 

@@ -33,7 +33,6 @@ export default function Dashboard() {
       value: kpis.assets_available,
       icon: CheckCircle2,
       color: "border-status-success/20 text-status-success",
-      bgGradient: "from-status-success/5 to-transparent",
       link: "/assets?status=Available"
     },
     {
@@ -41,7 +40,6 @@ export default function Dashboard() {
       value: kpis.assets_allocated,
       icon: Layers,
       color: "border-status-info/20 text-status-info",
-      bgGradient: "from-status-info/5 to-transparent",
       link: "/assets?status=Allocated"
     },
     {
@@ -49,7 +47,6 @@ export default function Dashboard() {
       value: kpis.maintenance_today,
       icon: Wrench,
       color: "border-status-warning/20 text-status-warning",
-      bgGradient: "from-status-warning/5 to-transparent",
       link: "/maintenance"
     },
     {
@@ -57,7 +54,6 @@ export default function Dashboard() {
       value: kpis.active_bookings,
       icon: CalendarCheck,
       color: "border-accent-purple/20 text-accent-purple",
-      bgGradient: "from-accent-purple/5 to-transparent",
       link: "/bookings"
     },
     {
@@ -65,7 +61,6 @@ export default function Dashboard() {
       value: kpis.pending_transfers,
       icon: RefreshCw,
       color: "border-accent-purple/10 text-accent-purple/80",
-      bgGradient: "from-accent-purple/5 to-transparent",
       link: "/allocations"
     },
     {
@@ -73,7 +68,6 @@ export default function Dashboard() {
       value: kpis.upcoming_returns,
       icon: CalendarCheck,
       color: "border-border-primary text-text-secondary",
-      bgGradient: "from-bg-secondary to-transparent",
       link: "/allocations?status=Active"
     },
     {
@@ -83,14 +77,12 @@ export default function Dashboard() {
       color: kpis.overdue_returns > 0 
         ? "border-status-danger/25 text-status-danger animate-pulse" 
         : "border-border-primary text-text-secondary",
-      bgGradient: kpis.overdue_returns > 0 ? "from-status-danger/5 to-transparent" : "from-bg-secondary to-transparent",
       link: "/allocations?status=Overdue"
     }
   ];
 
   return (
-    <div className="space-y-8 text-text-primary relative">
-      <div className="cosmic-glow" />
+    <div className="space-y-8 text-text-primary">
       {/* Welcome header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
@@ -117,9 +109,6 @@ export default function Dashboard() {
                 transition={{ duration: 0.15 }}
                 className={`bg-bg-card p-5 rounded-xl border border-border-primary relative overflow-hidden group shadow-sm flex flex-col justify-between h-full glimmer-card`}
               >
-                {/* Soft Gradient Overlay */}
-                <div className={`absolute inset-0 bg-gradient-to-br ${card.bgGradient} opacity-30 pointer-events-none`} />
-
                 <div className="flex justify-between items-start z-10">
                   <p className="text-[10px] font-semibold text-text-muted uppercase tracking-wider">{card.label}</p>
                   <div className={`p-1.5 rounded-lg border bg-bg-secondary ${card.color}`}>
