@@ -1,6 +1,7 @@
 import React from "react";
 import Sidebar from "../components/Sidebar";
 import TopBar from "../components/TopBar";
+import AIAssistant from "../components/AIAssistant";
 import { Outlet, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -27,6 +28,7 @@ export default function DashboardLayout() {
           </AnimatePresence>
         </main>
       </div>
+      <AIAssistant />
     </div>
   );
 }

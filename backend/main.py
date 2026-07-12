@@ -24,6 +24,7 @@ from routers.dashboard_routes import router as dashboard_router
 from routers.notification_routes import router as notification_router
 from routers.activity_log_routes import router as activity_log_router
 from routers.report_routes import router as report_router
+from routers.ai_routes import router as ai_router
 
 from core.limiter import limiter
 from slowapi.errors import RateLimitExceeded
@@ -108,6 +109,7 @@ app.include_router(dashboard_router)
 app.include_router(notification_router)
 app.include_router(activity_log_router)
 app.include_router(report_router)
+app.include_router(ai_router)
 
 @app.get("/health", tags=["Health"])
 async def health_check():
