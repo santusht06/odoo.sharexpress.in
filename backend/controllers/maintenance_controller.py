@@ -33,6 +33,7 @@ class MaintenanceController:
         }
 
         await db.maintenance.insert_one(new_req)
+        new_req.pop("_id", None)
 
         # Notify Asset Managers & Admins
         managers = db.users.find({"role": {"$in": ["ADMIN", "ASSET_MANAGER"]}})
@@ -57,7 +58,7 @@ class MaintenanceController:
         if status:
             query["status"] = status
 
-        cursor = db.maintenance.find(query).sort("created_at", -1)
+        cursor = db.maintenance.find(query, {"_id": 0}).sort("created_at", -1)
         requests = []
         async for doc in cursor:
             # Join asset details

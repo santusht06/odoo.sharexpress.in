@@ -13,6 +13,8 @@ import Bookings from "../pages/Bookings";
 import Maintenance from "../pages/Maintenance";
 import Audits from "../pages/Audits";
 import Reports from "../pages/Reports";
+import Logs from "../pages/Logs";
+
 
 export default function AppRoutes() {
   return (
@@ -40,6 +42,7 @@ export default function AppRoutes() {
           <Route element={<ProtectedRoute allowedRoles={["ADMIN", "ASSET_MANAGER"]} />}>
             <Route path="/employees" element={<Employees />} />
             <Route path="/reports" element={<Reports />} />
+            <Route path="/logs" element={<Logs />} />
           </Route>
         </Route>
       </Route>

@@ -66,6 +66,7 @@ class BookingController:
         }
 
         await db.bookings.insert_one(new_booking)
+        new_booking.pop("_id", None)
 
         # Notify booking user
         await notify_user(
@@ -89,7 +90,7 @@ class BookingController:
         if employee_id:
             query["booked_by"] = employee_id
 
-        cursor = db.bookings.find(query).sort("start_time", 1)
+        cursor = db.bookings.find(query, {"_id": 0}).sort("start_time", 1)
         bookings = []
         async for doc in cursor:
             # Join asset details

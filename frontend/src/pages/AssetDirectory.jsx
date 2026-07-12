@@ -39,6 +39,34 @@ export default function AssetDirectory() {
   const [deptId, setDeptId] = useState("");
   const [isBookable, setIsBookable] = useState(false);
   const [desc, setDesc] = useState("");
+  const [photoUrl, setPhotoUrl] = useState("");
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+
+  const handlePhotoUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    setUploadingPhoto(true);
+    try {
+      const res = await api.post("/assets/upload", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data"
+        }
+      });
+      if (res.data.success) {
+        setPhotoUrl(res.data.url);
+        toast.success("Image uploaded successfully!");
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to upload image to Cloudinary");
+    } finally {
+      setUploadingPhoto(false);
+    }
+  };
 
   const refreshAssets = () => {
     dispatch(fetchAssets({
@@ -73,7 +101,8 @@ export default function AssetDirectory() {
       location,
       department_id: deptId || null,
       is_bookable: isBookable,
-      description: desc
+      description: desc,
+      photos: photoUrl ? [photoUrl] : []
     })).unwrap()
       .then(() => {
         toast.success("Asset registered successfully!");
@@ -89,6 +118,7 @@ export default function AssetDirectory() {
         setDeptId("");
         setIsBookable(false);
         setDesc("");
+        setPhotoUrl("");
         refreshAssets();
       })
       .catch((err) => toast.error(err));
@@ -333,6 +363,26 @@ export default function AssetDirectory() {
             </div>
           </div>
 
+          <div className="space-y-1.5">
+            <label className="block text-[10px] font-semibold text-text-muted uppercase tracking-wider">Asset Photo</label>
+            <div className="flex items-center gap-4">
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handlePhotoUpload}
+                className="block w-full text-xs text-text-muted file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-accent-purple/10 file:text-accent-purple hover:file:bg-accent-purple/20 cursor-pointer"
+              />
+              {uploadingPhoto && <span className="text-[10px] text-accent-purple animate-pulse">Uploading...</span>}
+              {photoUrl && (
+                <img 
+                  src={photoUrl} 
+                  alt="Asset Preview" 
+                  className="h-10 w-10 object-cover rounded-lg border border-border-primary" 
+                />
+              )}
+            </div>
+          </div>
+
           <Input
             label="Notes / Description"
             type="textarea"
@@ -362,6 +412,16 @@ export default function AssetDirectory() {
       >
         {selectedAsset && (
           <div className="space-y-6">
+            {selectedAsset.photos && selectedAsset.photos.length > 0 && (
+              <div className="relative rounded-xl overflow-hidden border border-border-primary h-48 bg-bg-secondary flex items-center justify-center">
+                <img 
+                  src={selectedAsset.photos[0]} 
+                  alt={selectedAsset.name} 
+                  className="h-full w-full object-cover" 
+                />
+              </div>
+            )}
+
             {/* Header info & QR */}
             <div className="flex justify-between items-center bg-bg-secondary border border-border-primary p-4 rounded-xl">
               <div>

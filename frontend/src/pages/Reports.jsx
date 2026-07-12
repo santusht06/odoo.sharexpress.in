@@ -32,6 +32,23 @@ export default function Reports() {
     }
   };
 
+  const handleExport = async (type) => {
+    try {
+      const response = await api.get(`/reports/export?type=${type}`, {
+        responseType: "blob"
+      });
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", `${type}_report_${new Date().toISOString().split('T')[0]}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    } catch (e) {
+      console.error("Export failed", e);
+    }
+  };
+
   useEffect(() => {
     fetchData();
   }, []);
@@ -68,10 +85,29 @@ export default function Reports() {
           <h2 className="text-lg font-semibold tracking-tight text-text-primary">Reports & Metrics</h2>
           <p className="text-xs text-text-muted mt-0.5 font-medium">Exportable analytical metrics and category distributions</p>
         </div>
-        <Button variant="secondary" size="sm" onClick={fetchData} className="flex items-center gap-1.5">
-          <RefreshCw className="h-3.5 w-3.5" /> Refresh Data
-        </Button>
+        <div className="flex items-center gap-2">
+          <select 
+            onChange={(e) => {
+              if (e.target.value) {
+                handleExport(e.target.value);
+                e.target.value = ""; // Reset value
+              }
+            }}
+            className="bg-bg-card border border-border-primary rounded-lg text-xs px-2.5 py-1.5 font-medium text-text-primary outline-none focus:border-accent-purple"
+            defaultValue=""
+          >
+            <option value="" disabled>Export Report...</option>
+            <option value="assets">Assets List (CSV)</option>
+            <option value="allocations">Allocations (CSV)</option>
+            <option value="maintenance">Maintenance (CSV)</option>
+            <option value="bookings">Bookings (CSV)</option>
+          </select>
+          <Button variant="secondary" size="sm" onClick={fetchData} className="flex items-center gap-1.5">
+            <RefreshCw className="h-3.5 w-3.5" /> Refresh Data
+          </Button>
+        </div>
       </div>
+
 
       {loading ? (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

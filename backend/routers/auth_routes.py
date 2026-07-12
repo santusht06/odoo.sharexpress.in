@@ -3,12 +3,15 @@ from models.user_model import User, OTPverify, UpdateUser, SearchEmail
 from controllers.auth_controller import AuthController
 from utils.JWT import check_auth_middleware, check_token
 from core.database import get_db
+from core.limiter import limiter
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 db = get_db()
 
 @router.post("/sendOTP")
+@limiter.limit("5/minute")
 async def send_otp(
+    request: Request,
     user: User,
     _: None = Depends(check_token),
 ):
@@ -16,13 +19,15 @@ async def send_otp(
 
 
 @router.post("/verifyOTP")
+@limiter.limit("5/minute")
 async def verify_otp(
+    request: Request,
     payload: OTPverify,
     response: Response,
-    request: Request,
     _: None = Depends(check_token),
 ):
     return await AuthController.VerifyOTPControl(payload, response, request)
+
 
 
 @router.get("/google/login")

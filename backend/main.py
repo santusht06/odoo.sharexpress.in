@@ -25,6 +25,10 @@ from routers.notification_routes import router as notification_router
 from routers.activity_log_routes import router as activity_log_router
 from routers.report_routes import router as report_router
 
+from core.limiter import limiter
+from slowapi.errors import RateLimitExceeded
+from slowapi import _rate_limit_exceeded_handler
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Setup database indexes
@@ -45,6 +49,10 @@ app = FastAPI(
     version="1.0.0",
     lifespan=lifespan,
 )
+
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
 
 # CORS configuration
 is_prod = PROJECT_ENVIRONMENT == "PRODUCTION"

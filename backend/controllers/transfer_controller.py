@@ -50,6 +50,7 @@ class TransferController:
         }
 
         await db.transfers.insert_one(new_transfer)
+        new_transfer.pop("_id", None)
 
         # Notify managers/dept heads
         # Find asset managers & admin users to notify
@@ -92,7 +93,7 @@ class TransferController:
                     {"to_user": {"$in": users_in_dept}}
                 ]
 
-        cursor = db.transfers.find(query).sort("requested_at", -1)
+        cursor = db.transfers.find(query, {"_id": 0}).sort("requested_at", -1)
         transfers = []
         async for doc in cursor:
             # Join asset details

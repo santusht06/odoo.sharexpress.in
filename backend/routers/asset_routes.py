@@ -1,8 +1,9 @@
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, Request
 from models.asset_model import CreateAsset, UpdateAsset, UpdateAssetStatus
 from controllers.asset_controller import AssetController
 from utils.rbac import require_asset_manager, require_any_authenticated
 from typing import Optional
+from core.limiter import limiter
 
 router = APIRouter(prefix="/assets", tags=["Assets"])
 
@@ -42,10 +43,13 @@ from fastapi import UploadFile, File
 from utils.cloudinary_service import upload_file_to_cloudinary
 
 @router.post("/upload")
+@limiter.limit("10/minute")
 async def upload_asset_file(
+    request: Request,
     file: UploadFile = File(...),
     user=Depends(require_any_authenticated)
 ):
     contents = await file.read()
     cloudinary_result = await upload_file_to_cloudinary(contents, file.filename)
     return {"success": True, "url": cloudinary_result["secure_url"], "public_id": cloudinary_result["public_id"]}
+

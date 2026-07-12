@@ -50,13 +50,14 @@ class AssetController:
             "description": asset_in.description,
             "status": AssetStatus.AVAILABLE,
             "qr_code_data_url": qr_code_data_url,
-            "photos": [],
+            "photos": asset_in.photos or [],
             "documents": [],
             "created_at": datetime.utcnow(),
             "updated_at": datetime.utcnow()
         }
 
         await db.assets.insert_one(new_asset)
+        new_asset.pop("_id", None)
         await log_activity(actor_id, "CREATE", "ASSET", asset_id, new_value=new_asset)
         return {"success": True, "asset": new_asset}
 
@@ -125,21 +126,21 @@ class AssetController:
         asset["maintenance_history"] = maintenance_history
 
         # Fetch transfer history
-        transfer_cursor = db.transfers.find({"asset_id": asset_id}).sort("requested_at", -1)
+        transfer_cursor = db.transfers.find({"asset_id": asset_id}, {"_id": 0}).sort("requested_at", -1)
         transfer_history = []
         async for trans in transfer_cursor:
-            from_u = await db.users.find_one({"user_id": trans.get("from_user")})
-            to_u = await db.users.find_one({"user_id": trans.get("to_user")})
+            from_u = await db.users.find_one({"user_id": trans.get("from_user")}, {"_id": 0})
+            to_u = await db.users.find_one({"user_id": trans.get("to_user")}, {"_id": 0})
             trans["from_user_name"] = from_u.get("name") if from_u else "Unassigned"
             trans["to_user_name"] = to_u.get("name") if to_u else "Unknown"
             transfer_history.append(trans)
         asset["transfer_history"] = transfer_history
 
         # Fetch audit history
-        audit_cursor = db.audit_entries.find({"asset_id": asset_id}).sort("verified_at", -1)
+        audit_cursor = db.audit_entries.find({"asset_id": asset_id}, {"_id": 0}).sort("verified_at", -1)
         audit_history = []
         async for entry in audit_cursor:
-            auditor = await db.users.find_one({"user_id": entry.get("auditor_id")})
+            auditor = await db.users.find_one({"user_id": entry.get("auditor_id")}, {"_id": 0})
             entry["auditor_name"] = auditor.get("name") if auditor else "System"
             audit_history.append(entry)
         asset["audit_history"] = audit_history

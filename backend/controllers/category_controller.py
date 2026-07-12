@@ -25,6 +25,7 @@ class CategoryController:
         }
 
         await db.categories.insert_one(new_cat)
+        new_cat.pop("_id", None)
         await log_activity(actor_id, "CREATE", "CATEGORY", cat_id, new_value=new_cat)
         return {"success": True, "category": new_cat}
 

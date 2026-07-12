@@ -40,6 +40,7 @@ class DepartmentController:
         }
 
         await db.departments.insert_one(new_dept)
+        new_dept.pop("_id", None)
         
         # If head is assigned, make sure they are updated to have this department ID
         if dept_in.head_id:

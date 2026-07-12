@@ -52,6 +52,7 @@ class AllocationController:
 
         # Insert allocation
         await db.allocations.insert_one(new_alloc)
+        new_alloc.pop("_id", None)
 
         # Update asset status
         await db.assets.update_one(
@@ -87,7 +88,7 @@ class AllocationController:
         if employee_id:
             query["allocated_to"] = employee_id
 
-        cursor = db.allocations.find(query).sort("allocated_at", -1)
+        cursor = db.allocations.find(query, {"_id": 0}).sort("allocated_at", -1)
         allocations = []
         async for doc in cursor:
             # Join asset details

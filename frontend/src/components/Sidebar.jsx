@@ -45,6 +45,7 @@ export default function Sidebar() {
     { to: "/maintenance", label: "Maintenance", icon: Wrench, roles: ["ADMIN", "ASSET_MANAGER", "DEPARTMENT_HEAD", "EMPLOYEE"] },
     { to: "/audits", label: "Audits", icon: ClipboardCheck, roles: ["ADMIN", "ASSET_MANAGER", "DEPARTMENT_HEAD", "EMPLOYEE"] },
     { to: "/reports", label: "Reports & Analytics", icon: BarChart3, roles: ["ADMIN", "ASSET_MANAGER"] },
+    { to: "/logs", label: "Audit Logs", icon: Activity, roles: ["ADMIN", "ASSET_MANAGER"] },
   ];
 
   const filteredItems = navItems.filter(item => item.roles.includes(user?.role));

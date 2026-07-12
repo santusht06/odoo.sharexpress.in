@@ -31,6 +31,7 @@ class CreateAsset(BaseModel):
     department_id: Optional[str] = None
     is_bookable: bool = False
     description: Optional[str] = ""
+    photos: Optional[List[str]] = []
 
 
 class UpdateAsset(BaseModel):
@@ -44,6 +45,7 @@ class UpdateAsset(BaseModel):
     department_id: Optional[str] = None
     is_bookable: Optional[bool] = None
     description: Optional[str] = None
+    photos: Optional[List[str]] = None
 
 
 class UpdateAssetStatus(BaseModel):

@@ -32,12 +32,13 @@ class AuditController:
         }
 
         await db.audit_cycles.insert_one(new_cycle)
+        new_cycle.pop("_id", None)
         await log_activity(actor_id, "CREATE_AUDIT_CYCLE", "AUDIT", cycle_id, new_value=new_cycle)
         return {"success": True, "cycle": new_cycle}
 
     @staticmethod
     async def list_audit_cycles():
-        cursor = db.audit_cycles.find().sort("created_at", -1)
+        cursor = db.audit_cycles.find({}, {"_id": 0}).sort("created_at", -1)
         cycles = []
         async for doc in cursor:
             # Join auditors info
@@ -52,7 +53,7 @@ class AuditController:
 
     @staticmethod
     async def get_audit_cycle(cycle_id: str):
-        cycle = await db.audit_cycles.find_one({"cycle_id": cycle_id})
+        cycle = await db.audit_cycles.find_one({"cycle_id": cycle_id}, {"_id": 0})
         if not cycle:
             raise HTTPException(status_code=404, detail="Audit cycle not found")
         return {"success": True, "cycle": cycle}

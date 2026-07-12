@@ -35,7 +35,7 @@ class ReportController:
         cursor = db.assets.find({
             "status": "Available",
             "updated_at": {"$lt": month_ago}
-        })
+        }, {"_id": 0})
         idle_assets = []
         async for doc in cursor:
             # Join category name
@@ -123,7 +123,7 @@ class ReportController:
         # Fallback to older records
         cursor = db.assets.find({
             "status": {"$nin": ["Retired", "Disposed"]}
-        })
+        }, {"_id": 0})
         nearing = []
         async for doc in cursor:
             p_date_str = doc.get("purchase_date")
@@ -137,3 +137,98 @@ class ReportController:
                 except ValueError:
                     pass
         return {"success": True, "assets": nearing[:15]}
+
+    @staticmethod
+    async def export_csv(entity_type: str):
+        import csv
+        import io
+        
+        output = io.StringIO()
+        writer = csv.writer(output)
+        
+        if entity_type == "assets":
+            writer.writerow(["Asset ID", "Tag", "Name", "Serial Number", "Category", "Cost", "Purchase Date", "Condition", "Location", "Status", "Bookable"])
+            cursor = db.assets.find({})
+            async for doc in cursor:
+                cat = await db.categories.find_one({"category_id": doc.get("category_id")})
+                cat_name = cat.get("name") if cat else "N/A"
+                writer.writerow([
+                    doc.get("asset_id", ""),
+                    doc.get("asset_tag", ""),
+                    doc.get("name", ""),
+                    doc.get("serial_number", ""),
+                    cat_name,
+                    doc.get("cost", 0),
+                    doc.get("purchase_date", ""),
+                    doc.get("condition", ""),
+                    doc.get("location", ""),
+                    doc.get("status", ""),
+                    "Yes" if doc.get("is_bookable") else "No"
+                ])
+        elif entity_type == "allocations":
+            writer.writerow(["Allocation ID", "Asset Tag", "Asset Name", "Allocated To", "Allocated By", "Date", "Expected Return", "Return Status"])
+            cursor = db.allocations.find({})
+            async for doc in cursor:
+                asset = await db.assets.find_one({"asset_id": doc.get("asset_id")})
+                asset_tag = asset.get("asset_tag") if asset else "N/A"
+                asset_name = asset.get("name") if asset else "N/A"
+                
+                u_to = await db.users.find_one({"user_id": doc.get("allocated_to")})
+                to_name = u_to.get("name") if u_to else "N/A"
+                
+                u_by = await db.users.find_one({"user_id": doc.get("allocated_by")})
+                by_name = u_by.get("name") if u_by else "N/A"
+                
+                writer.writerow([
+                    doc.get("allocation_id", ""),
+                    asset_tag,
+                    asset_name,
+                    to_name,
+                    by_name,
+                    str(doc.get("allocated_at", "")),
+                    str(doc.get("expected_return_date", "")),
+                    doc.get("status", "")
+                ])
+        elif entity_type == "maintenance":
+            writer.writerow(["Request ID", "Asset Tag", "Asset Name", "Priority", "Issue", "Status", "Raised At"])
+            cursor = db.maintenance.find({})
+            async for doc in cursor:
+                asset = await db.assets.find_one({"asset_id": doc.get("asset_id")})
+                asset_tag = asset.get("asset_tag") if asset else "N/A"
+                asset_name = asset.get("name") if asset else "N/A"
+                writer.writerow([
+                    doc.get("request_id", ""),
+                    asset_tag,
+                    asset_name,
+                    doc.get("priority", ""),
+                    doc.get("issue_description", ""),
+                    doc.get("status", ""),
+                    str(doc.get("created_at", ""))
+                ])
+        elif entity_type == "bookings":
+            writer.writerow(["Booking ID", "Asset Tag", "Asset Name", "Booked By", "Start Time", "End Time", "Purpose", "Status"])
+            cursor = db.bookings.find({})
+            async for doc in cursor:
+                asset = await db.assets.find_one({"asset_id": doc.get("asset_id")})
+                asset_tag = asset.get("asset_tag") if asset else "N/A"
+                asset_name = asset.get("name") if asset else "N/A"
+                
+                u = await db.users.find_one({"user_id": doc.get("booked_by")})
+                u_name = u.get("name") if u else "N/A"
+                
+                writer.writerow([
+                    doc.get("booking_id", ""),
+                    asset_tag,
+                    asset_name,
+                    u_name,
+                    str(doc.get("start_time", "")),
+                    str(doc.get("end_time", "")),
+                    doc.get("purpose", ""),
+                    doc.get("status", "")
+                ])
+        else:
+            writer.writerow(["Invalid Entity Type"])
+            
+        output.seek(0)
+        return output.getvalue()
+

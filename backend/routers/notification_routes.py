@@ -8,7 +8,7 @@ db = get_db()
 
 @router.get("")
 async def list_notifications(user=Depends(require_any_authenticated)):
-    cursor = db.notifications.find({"user_id": user["user_id"]}).sort("created_at", -1)
+    cursor = db.notifications.find({"user_id": user["user_id"]}, {"_id": 0}).sort("created_at", -1)
     notifications = []
     async for doc in cursor:
         notifications.append(doc)
