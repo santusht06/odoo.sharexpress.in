@@ -83,7 +83,7 @@ class MaintenanceController:
         if not req:
             raise HTTPException(status_code=404, detail="Maintenance request not found")
 
-        if req.get("status") != "Pending Approval":
+        if req.get("status") not in ["Pending", "Pending Approval"]:
             raise HTTPException(status_code=400, detail="Only Pending requests can be approved/rejected")
 
         status_str = "Approved" if approve else "Rejected"
@@ -124,7 +124,7 @@ class MaintenanceController:
         if not req:
             raise HTTPException(status_code=404, detail="Maintenance request not found")
 
-        if req.get("status") not in ["Approved", "Under Repair"]:
+        if req.get("status") not in ["Approved", "Under Repair", "In Progress"]:
             raise HTTPException(status_code=400, detail="Cannot assign technician for this status")
 
         await db.maintenance.update_one(
@@ -146,7 +146,7 @@ class MaintenanceController:
         if not req:
             raise HTTPException(status_code=404, detail="Maintenance request not found")
 
-        if req.get("status") != "Under Repair":
+        if req.get("status") not in ["Under Repair", "In Progress"]:
             raise HTTPException(status_code=400, detail="Only requests Under Repair can be marked resolved")
 
         # Resolve maintenance
