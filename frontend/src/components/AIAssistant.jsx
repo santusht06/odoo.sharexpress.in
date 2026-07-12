@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { Sparkles, Send, X, Bot, HelpCircle } from "lucide-react";
+import { Sparkles, Send, X, Bot, HelpCircle, RotateCcw } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { api } from "../api/api";
 import Button from "./ui/Button";
@@ -15,6 +15,23 @@ export default function AIAssistant() {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const messagesEndRef = useRef(null);
+
+  const handleResetChat = () => {
+    setMessages([
+      {
+        role: "assistant",
+        content: "Hello! I am **AssetFlow AI**, your system assistant. Ask me anything about live assets, reservations, maintenance tickets, or audit logs."
+      }
+    ]);
+    setActiveSuggestions([
+      "What assets are under maintenance?",
+      "Who has overdue returns?",
+      "Show recent activity logs",
+      "Are there active bookings?"
+    ]);
+    setInput("");
+    setLoading(false);
+  };
 
   const [activeSuggestions, setActiveSuggestions] = useState([
     "What assets are under maintenance?",
@@ -150,12 +167,21 @@ export default function AIAssistant() {
                   </div>
                 </div>
                 
-                <button
-                  onClick={() => setIsOpen(false)}
-                  className="p-1 hover:bg-bg-secondary text-text-muted hover:text-text-primary rounded-md transition-colors cursor-pointer"
-                >
-                  <X className="h-4 w-4" />
-                </button>
+                <div className="flex items-center gap-1.5">
+                  <button
+                    onClick={handleResetChat}
+                    className="p-1 hover:bg-bg-secondary text-text-muted hover:text-text-primary rounded-md transition-colors cursor-pointer"
+                    title="Start New Chat"
+                  >
+                    <RotateCcw className="h-3.5 w-3.5" />
+                  </button>
+                  <button
+                    onClick={() => setIsOpen(false)}
+                    className="p-1 hover:bg-bg-secondary text-text-muted hover:text-text-primary rounded-md transition-colors cursor-pointer"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
               </div>
 
               {/* Chat messages */}
