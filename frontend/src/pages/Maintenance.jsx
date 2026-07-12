@@ -9,6 +9,7 @@ import {
   resolveMaintenance
 } from "../store/slices/maintenanceSlice";
 import { fetchAssets } from "../store/slices/assetSlice";
+import { api } from "../api/api";
 import { toast } from "react-toastify";
 import { Plus, Check, X, UserPlus, CheckSquare } from "lucide-react";
 import Button from "../components/ui/Button";
@@ -16,6 +17,7 @@ import Input from "../components/ui/Input";
 import Drawer from "../components/ui/Drawer";
 import StatusBadge from "../components/ui/StatusBadge";
 import { TableContainer, Table, Thead, Tbody, Tr, Th, Td, EmptyState } from "../components/ui/TableComponents";
+import ImageModal from "../components/ui/ImageModal";
 
 export default function Maintenance() {
   const dispatch = useDispatch();
@@ -34,6 +36,36 @@ export default function Maintenance() {
   const [priority, setPriority] = useState("Medium");
   const [techName, setTechName] = useState("");
   const [resNotes, setResNotes] = useState("");
+  const [photoUrl, setPhotoUrl] = useState("");
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [viewerPhotoUrl, setViewerPhotoUrl] = useState("");
+  const [viewerPhotoTitle, setViewerPhotoTitle] = useState("");
+
+  const handlePhotoUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    setUploadingPhoto(true);
+    try {
+      const res = await api.post("/assets/upload", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data"
+        }
+      });
+      if (res.data.success) {
+        setPhotoUrl(res.data.url);
+        toast.success("Incident photo uploaded successfully!");
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to upload image to Cloudinary");
+    } finally {
+      setUploadingPhoto(false);
+    }
+  };
 
   const refreshData = () => {
     dispatch(fetchMaintenanceRequests());
@@ -51,7 +83,8 @@ export default function Maintenance() {
     dispatch(raiseMaintenanceRequest({
       asset_id: assetId,
       issue_description: desc,
-      priority
+      priority,
+      photos: photoUrl ? [photoUrl] : []
     })).unwrap()
       .then(() => {
         toast.success("Maintenance request raised successfully!");
@@ -59,6 +92,7 @@ export default function Maintenance() {
         setAssetId("");
         setDesc("");
         setPriority("Medium");
+        setPhotoUrl("");
         refreshData();
       })
       .catch((err) => toast.error(err));
@@ -163,7 +197,32 @@ export default function Maintenance() {
                       <p className="text-[9px] text-accent-purple font-bold mt-0.5">{req.asset_tag}</p>
                     </div>
                   </Td>
-                  <Td className="font-medium text-text-secondary leading-relaxed max-w-xs">{req.issue_description}</Td>
+                  <Td className="font-medium text-text-secondary leading-relaxed max-w-xs">
+                    <div className="flex flex-col gap-1.5">
+                      <p className="line-clamp-2" title={req.issue_description}>{req.issue_description}</p>
+                      {req.photos && req.photos.length > 0 && (
+                        <div className="flex gap-1.5 flex-wrap mt-0.5">
+                          {req.photos.map((photo, pIdx) => (
+                            <button 
+                              key={pIdx} 
+                              type="button"
+                              onClick={() => {
+                                setViewerPhotoUrl(photo);
+                                setViewerPhotoTitle(`Malfunction Photo - ${req.asset_name} (${req.asset_tag})`);
+                              }}
+                              className="inline-block h-10 w-10 rounded-lg overflow-hidden border border-border-primary/80 hover:border-accent-purple/60 transition-colors shadow-sm cursor-zoom-in"
+                            >
+                              <img 
+                                src={photo} 
+                                alt="Reported malfunction" 
+                                className="h-full w-full object-cover hover:scale-105 transition-transform" 
+                              />
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </Td>
                   <Td>
                     <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
                       req.priority === "High" 
@@ -282,6 +341,26 @@ export default function Maintenance() {
             placeholder="Describe hardware cracks, visual issues, hardware components behaving abnormally..."
           />
 
+          <div className="space-y-1.5">
+            <label className="block text-[10px] font-semibold text-text-muted uppercase tracking-wider">Malfunction Pictures (Optional)</label>
+            <div className="flex items-center gap-4">
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handlePhotoUpload}
+                className="block w-full text-xs text-text-muted file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-accent-purple/10 file:text-accent-purple hover:file:bg-accent-purple/20 cursor-pointer"
+              />
+              {uploadingPhoto && <span className="text-[10px] text-accent-purple animate-pulse">Uploading...</span>}
+              {photoUrl && (
+                <img 
+                  src={photoUrl} 
+                  alt="Incident Preview" 
+                  className="h-10 w-10 object-cover rounded-lg border border-border-primary" 
+                />
+              )}
+            </div>
+          </div>
+
           <div className="flex justify-end gap-2 pt-4 border-t border-border-primary">
             <Button variant="secondary" onClick={() => setShowAddForm(false)}>
               Cancel
@@ -351,6 +430,16 @@ export default function Maintenance() {
           </div>
         </form>
       </Drawer>
+
+      <ImageModal
+        isOpen={!!viewerPhotoUrl}
+        onClose={() => {
+          setViewerPhotoUrl("");
+          setViewerPhotoTitle("");
+        }}
+        imageUrl={viewerPhotoUrl}
+        title={viewerPhotoTitle}
+      />
     </div>
   );
 }

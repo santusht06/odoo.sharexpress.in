@@ -1,7 +1,7 @@
 from models.booking_model import CreateBooking, RescheduleBooking
 from fastapi import HTTPException
 from core.database import get_db
-from datetime import datetime
+from datetime import datetime, timezone
 from uuid import uuid4
 from utils.activity_logger import log_activity
 from utils.notifications import notify_user
@@ -27,6 +27,11 @@ class BookingController:
             end_dt = datetime.fromisoformat(booking_in.end_time)
         except ValueError:
             raise HTTPException(status_code=400, detail="Invalid date format. Use ISO-8601.")
+
+        if start_dt.tzinfo is not None:
+            start_dt = start_dt.astimezone(timezone.utc).replace(tzinfo=None)
+        if end_dt.tzinfo is not None:
+            end_dt = end_dt.astimezone(timezone.utc).replace(tzinfo=None)
 
         if start_dt >= end_dt:
             raise HTTPException(status_code=400, detail="End time must be after start time")
@@ -157,6 +162,11 @@ class BookingController:
             end_dt = datetime.fromisoformat(resched_in.end_time)
         except ValueError:
             raise HTTPException(status_code=400, detail="Invalid date format. Use ISO-8601.")
+
+        if start_dt.tzinfo is not None:
+            start_dt = start_dt.astimezone(timezone.utc).replace(tzinfo=None)
+        if end_dt.tzinfo is not None:
+            end_dt = end_dt.astimezone(timezone.utc).replace(tzinfo=None)
 
         if start_dt >= end_dt:
             raise HTTPException(status_code=400, detail="End time must be after start time")

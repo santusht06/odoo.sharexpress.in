@@ -27,6 +27,7 @@ class MaintenanceController:
             "assigned_technician": None,
             "resolution_notes": None,
             "status": "Pending",
+            "photos": maint_in.photos or [],
             "created_at": datetime.utcnow(),
             "approved_at": None,
             "resolved_at": None

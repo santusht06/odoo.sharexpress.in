@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, List
 from enum import Enum
 
 
@@ -14,6 +14,7 @@ class CreateMaintenance(BaseModel):
     asset_id: str
     issue_description: str
     priority: MaintenancePriority = MaintenancePriority.MEDIUM
+    photos: Optional[List[str]] = []
 
 
 class AssignTechnician(BaseModel):

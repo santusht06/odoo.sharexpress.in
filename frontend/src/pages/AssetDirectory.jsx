@@ -11,6 +11,7 @@ import Input from "../components/ui/Input";
 import Drawer from "../components/ui/Drawer";
 import StatusBadge from "../components/ui/StatusBadge";
 import { TableContainer, Table, Thead, Tbody, Tr, Th, Td, EmptyState, TableSkeleton } from "../components/ui/TableComponents";
+import ImageModal from "../components/ui/ImageModal";
 
 export default function AssetDirectory() {
   const dispatch = useDispatch();
@@ -41,6 +42,8 @@ export default function AssetDirectory() {
   const [desc, setDesc] = useState("");
   const [photoUrl, setPhotoUrl] = useState("");
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [viewerPhotoUrl, setViewerPhotoUrl] = useState("");
+  const [viewerPhotoTitle, setViewerPhotoTitle] = useState("");
 
   const handlePhotoUpload = async (e) => {
     const file = e.target.files[0];
@@ -413,13 +416,20 @@ export default function AssetDirectory() {
         {selectedAsset && (
           <div className="space-y-6">
             {selectedAsset.photos && selectedAsset.photos.length > 0 && (
-              <div className="relative rounded-xl overflow-hidden border border-border-primary h-48 bg-bg-secondary flex items-center justify-center">
+              <button 
+                type="button"
+                onClick={() => {
+                  setViewerPhotoUrl(selectedAsset.photos[0]);
+                  setViewerPhotoTitle(`Asset Catalog - ${selectedAsset.name} (${selectedAsset.asset_tag})`);
+                }}
+                className="relative rounded-xl overflow-hidden border border-border-primary h-48 bg-bg-secondary w-full flex items-center justify-center cursor-zoom-in group"
+              >
                 <img 
                   src={selectedAsset.photos[0]} 
                   alt={selectedAsset.name} 
-                  className="h-full w-full object-cover" 
+                  className="h-full w-full object-cover transition-transform group-hover:scale-[1.02]" 
                 />
-              </div>
+              </button>
             )}
 
             {/* Header info & QR */}
@@ -500,6 +510,16 @@ export default function AssetDirectory() {
           </div>
         )}
       </Drawer>
+
+      <ImageModal
+        isOpen={!!viewerPhotoUrl}
+        onClose={() => {
+          setViewerPhotoUrl("");
+          setViewerPhotoTitle("");
+        }}
+        imageUrl={viewerPhotoUrl}
+        title={viewerPhotoTitle}
+      />
     </div>
   );
 }

@@ -1,7 +1,7 @@
 from models.allocation_model import CreateAllocation, ReturnAsset
 from fastapi import HTTPException
 from core.database import get_db
-from datetime import datetime
+from datetime import datetime, timezone
 from uuid import uuid4
 from utils.activity_logger import log_activity
 from utils.notifications import notify_user
@@ -31,6 +31,8 @@ class AllocationController:
         if alloc_in.expected_return_date:
             try:
                 expected_date = datetime.fromisoformat(alloc_in.expected_return_date)
+                if expected_date.tzinfo is not None:
+                    expected_date = expected_date.astimezone(timezone.utc).replace(tzinfo=None)
             except ValueError:
                 raise HTTPException(status_code=400, detail="Invalid date format. Use ISO-8601 (YYYY-MM-DD).")
 
