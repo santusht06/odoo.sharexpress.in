@@ -17,8 +17,12 @@
   --color-status-danger: var(--danger);
   --color-status-info: var(--info);
   
-  --shadow-premium: 0 1px 3px rgba(0,0,0,0.05), 0 10px 40px -10px rgba(0,0,0,0.07);
-  --shadow-premium-dark: 0 1px 3px rgba(0,0,0,0.3), 0 10px 40px -10px rgba(0,0,0,0.5);
+  --shadow-sm: var(--shadow-sm-val);
+  --shadow-md: var(--shadow-md-val);
+  --shadow-lg: var(--shadow-lg-val);
+  --shadow-2xl: var(--shadow-2xl-val);
+  --shadow-premium: var(--shadow-premium-val);
+  --shadow: var(--shadow-val);
   
   --animate-palette-in: palette-in 150ms ease-out;
   --animate-palette-out: palette-out 150ms ease-in;
@@ -49,6 +53,14 @@
   --danger: #EF4444;
   --info: #3B82F6;
   
+  /* Disable all shadows in Light Mode */
+  --shadow-val: none;
+  --shadow-sm-val: none;
+  --shadow-md-val: none;
+  --shadow-lg-val: none;
+  --shadow-2xl-val: none;
+  --shadow-premium-val: none;
+  
   --toastify-color-light: var(--card);
   --toastify-text-color-light: var(--primary-text);
 }
@@ -62,6 +74,14 @@
   --primary-text: #FAFAFA;
   --secondary-text: #A1A1AA;
   --muted-text: #71717A;
+  
+  /* Enable shadows in Dark Mode */
+  --shadow-val: 0 1px 3px 0 rgba(0, 0, 0, 0.3), 0 1px 2px -1px rgba(0, 0, 0, 0.3);
+  --shadow-sm-val: 0 1px 2px 0 rgba(0, 0, 0, 0.2);
+  --shadow-md-val: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -2px rgba(0, 0, 0, 0.4);
+  --shadow-lg-val: 0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -4px rgba(0, 0, 0, 0.4);
+  --shadow-2xl-val: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  --shadow-premium-val: 0 1px 3px rgba(0,0,0,0.3), 0 10px 40px -10px rgba(0,0,0,0.5);
   
   --toastify-color-dark: var(--card);
   --toastify-text-color-dark: var(--primary-text);
@@ -117,8 +137,11 @@
   background-color: var(--accent);
   color: #FFFFFF;
   border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  box-shadow: none;
   transition: all 150ms ease-in-out;
+}
+.dark .linear-btn-primary {
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 .linear-btn-primary:hover {
   background-color: #6e7be2;
@@ -139,8 +162,11 @@
   background-color: var(--card);
   color: var(--primary-text);
   border: 1px solid var(--border);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+  box-shadow: none;
   transition: all 150ms ease-in-out;
+}
+.dark .linear-btn-secondary {
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
 }
 .linear-btn-secondary:hover {
   background-color: var(--secondary-bg);
@@ -159,9 +185,6 @@
   box-shadow: var(--shadow-premium) !important;
   padding: 12px 16px !important;
   min-height: 48px !important;
-}
-.dark .Toastify__toast {
-  box-shadow: var(--shadow-premium-dark) !important;
 }
 .Toastify__toast-body {
   padding: 0 !important;
@@ -189,7 +212,7 @@
 }
 .glimmer-card:hover {
   border-color: rgba(94, 106, 210, 0.3) !important;
-  box-shadow: 0 0 20px rgba(94, 106, 210, 0.05);
+  box-shadow: none;
 }
 .dark .glimmer-card:hover {
   border-color: rgba(94, 106, 210, 0.45) !important;
