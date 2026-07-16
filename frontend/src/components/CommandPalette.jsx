@@ -1,3 +1,19 @@
+/*
+ * Copyright 2026 Sharexpress Contributors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 import React, { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTheme } from "../context/ThemeContext";
@@ -17,7 +33,8 @@ import {
   Moon, 
   Sun, 
   LogOut,
-  Sparkles
+  Sparkles,
+  Activity
 } from "lucide-react";
 
 export default function CommandPalette({ isOpen, onClose }) {
@@ -38,6 +55,7 @@ export default function CommandPalette({ isOpen, onClose }) {
     { id: "audits", name: "Go to Audits & Compliance", shortcut: "G U", icon: ClipboardCheck, action: () => navigate("/audits"), roles: ["ADMIN", "ASSET_MANAGER", "DEPARTMENT_HEAD", "EMPLOYEE"] },
     { id: "employees", name: "Go to Employees Directory", shortcut: "G E", icon: Users, action: () => navigate("/employees"), roles: ["ADMIN", "ASSET_MANAGER"] },
     { id: "reports", name: "Go to Reports & Analytics", shortcut: "G R", icon: BarChart3, action: () => navigate("/reports"), roles: ["ADMIN", "ASSET_MANAGER"] },
+    { id: "logs", name: "Go to Audit Logs", shortcut: "G G", icon: Activity, action: () => navigate("/logs"), roles: ["ADMIN", "ASSET_MANAGER"] },
     { id: "organization", name: "Go to Organization Setup", shortcut: "G O", icon: FolderTree, action: () => navigate("/organization"), roles: ["ADMIN"] },
     { id: "theme", name: `Switch to ${theme === "dark" ? "Light" : "Dark"} Mode`, shortcut: "T T", icon: theme === "dark" ? Sun : Moon, action: () => { toggleTheme(); onClose(); } },
     { id: "logout", name: "Sign Out / Exit", shortcut: "⌥ L", icon: LogOut, action: () => dispatch(logoutUser()).then(() => { navigate("/signin"); onClose(); }) }
@@ -46,7 +64,8 @@ export default function CommandPalette({ isOpen, onClose }) {
   const actions = rawActions.filter(item => !item.roles || item.roles.includes(user?.role));
 
   const filtered = actions.filter((act) => 
-    act.name.toLowerCase().includes(search.toLowerCase())
+    act.name.toLowerCase().includes(search.toLowerCase()) ||
+    (act.shortcut && act.shortcut.toLowerCase().replace(/\s+/g, "").includes(search.toLowerCase().replace(/\s+/g, "")))
   );
 
   useEffect(() => {
@@ -92,81 +111,84 @@ export default function CommandPalette({ isOpen, onClose }) {
   return (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-start justify-center pt-[15vh] px-4">
-          {/* Backdrop Blur */}
-          <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
+        <>
+          {/* Backdrop Click-to-Close Overlay */}
+          <div 
             onClick={onClose}
-            className="absolute inset-0 bg-[#09090B]/60 backdrop-blur-md"
+            className="fixed inset-0 z-40 pointer-events-auto cursor-default"
           />
 
-          {/* Palette Box */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.97, y: -8 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.97, y: -8 }}
-            transition={{ duration: 0.15, ease: "easeInOut" }}
-            className="relative w-full max-w-lg overflow-hidden rounded-xl border border-border-primary bg-bg-card shadow-2xl"
-          >
-            <div className="flex items-center gap-3 border-b border-border-primary px-4 py-3.5">
-              <Search className="h-4.5 w-4.5 text-text-muted" />
-              <input
-                type="text"
-                autoFocus
-                placeholder="Type a command or search..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="w-full bg-transparent text-sm text-text-primary placeholder-text-muted outline-none border-none focus:ring-0"
-              />
-              <span className="rounded bg-bg-secondary px-1.5 py-0.5 text-[10px] font-medium text-text-muted border border-border-primary">ESC</span>
-            </div>
+          {/* Palette Box Wrapper (pointer-events-none lets clicks pass through to backdrop) */}
+          <div className="fixed inset-0 z-50 flex items-start justify-center pt-[15vh] px-4 pointer-events-none">
+            {/* Palette Box Dialog */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.97, y: -8 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.97, y: -8 }}
+              transition={{ duration: 0.15, ease: "easeInOut" }}
+              className="relative w-full max-w-lg bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl shadow-2xl overflow-hidden pointer-events-auto"
+            >
+              {/* Search input container */}
+              <div className="flex items-center gap-3 border-b border-zinc-200 dark:border-zinc-800 px-4 py-3.5 bg-white dark:bg-zinc-900">
+                <Search className="h-4.5 w-4.5 text-zinc-400 dark:text-zinc-500" />
+                <input
+                  type="text"
+                  autoFocus
+                  placeholder="Type a command or search..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="w-full bg-transparent text-sm text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 dark:placeholder-zinc-500 outline-none border-none focus:ring-0 focus:outline-none"
+                />
+                <span className="rounded bg-zinc-100 dark:bg-zinc-800/80 px-1.5 py-0.5 text-[10px] font-medium text-zinc-500 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-700">ESC</span>
+              </div>
 
-            <div className="max-h-[320px] overflow-y-auto p-2" ref={listRef}>
-              {filtered.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-10 px-4 text-center text-text-muted">
-                  <Sparkles className="h-5 w-5 text-accent-purple mb-2 opacity-50" />
-                  <p className="text-xs font-medium">No results found for "{search}"</p>
-                </div>
-              ) : (
-                filtered.map((item, idx) => {
-                  const Icon = item.icon;
-                  const isActive = idx === activeIndex;
-                  return (
-                    <button
-                      key={item.id}
-                      onClick={() => { item.action(); onClose(); }}
-                      onMouseEnter={() => setActiveIndex(idx)}
-                      className={`flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-left text-xs transition-colors ${
-                        isActive 
-                          ? "bg-accent-purple text-white" 
-                          : "text-text-secondary hover:bg-bg-secondary hover:text-text-primary"
-                      }`}
-                    >
-                      <div className="flex items-center gap-3">
-                        <Icon className={`h-4 w-4 ${isActive ? "text-white" : "text-text-muted"}`} />
-                        <span className="font-medium">{item.name}</span>
-                      </div>
-                      {item.shortcut && (
-                        <span className={`text-[10px] font-mono tracking-wider ${isActive ? "text-white/80" : "text-text-muted"}`}>
-                          {item.shortcut}
-                        </span>
-                      )}
-                    </button>
-                  );
-                })
-              )}
-            </div>
-            
-            <div className="flex items-center justify-between border-t border-border-primary bg-bg-secondary px-4 py-2 text-[10px] text-text-muted font-medium">
-              <span className="flex items-center gap-1">
-                Use ↑↓ to navigate, <span className="font-bold">Enter</span> to select
-              </span>
-              <span>Linear Commands</span>
-            </div>
-          </motion.div>
-        </div>
+              {/* Action list list box */}
+              <div className="max-h-[320px] overflow-y-auto p-2 bg-white dark:bg-zinc-900" ref={listRef}>
+                {filtered.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-10 px-4 text-center text-zinc-400 dark:text-zinc-500">
+                    <Sparkles className="h-5 w-5 text-accent-purple mb-2 opacity-50" />
+                    <p className="text-xs font-medium">No results found for "{search}"</p>
+                  </div>
+                ) : (
+                  filtered.map((item, idx) => {
+                    const Icon = item.icon;
+                    const isActive = idx === activeIndex;
+                    return (
+                      <button
+                        key={item.id}
+                        onClick={() => { item.action(); onClose(); }}
+                        onMouseEnter={() => setActiveIndex(idx)}
+                        className={`flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-left text-xs transition-colors cursor-pointer ${
+                          isActive 
+                            ? "bg-accent-purple text-white shadow-sm" 
+                            : "text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800/40 hover:text-zinc-900 dark:hover:text-zinc-100"
+                        }`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <Icon className={`h-4 w-4 ${isActive ? "text-white" : "text-zinc-400 dark:text-zinc-500"}`} />
+                          <span className="font-medium">{item.name}</span>
+                        </div>
+                        {item.shortcut && (
+                          <span className={`text-[10px] font-mono tracking-wider ${isActive ? "text-white/80" : "text-zinc-400 dark:text-zinc-500"}`}>
+                            {item.shortcut}
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })
+                )}
+              </div>
+              
+              {/* Bottom guide bar */}
+              <div className="flex items-center justify-between border-t border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/40 px-4 py-2.5 text-[10px] text-zinc-500 dark:text-zinc-400 font-medium select-none">
+                <span className="flex items-center gap-1">
+                  Use ↑↓ to navigate, <span className="font-bold">Enter</span> to select
+                </span>
+                <span>Linear Commands</span>
+              </div>
+            </motion.div>
+          </div>
+        </>
       )}
     </AnimatePresence>
   );

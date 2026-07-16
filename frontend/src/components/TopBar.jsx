@@ -1,15 +1,35 @@
+/*
+ * Copyright 2026 Sharexpress Contributors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 import React, { useEffect, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { fetchNotifications, markNotificationRead, markAllNotificationsRead } from "../store/slices/notificationSlice";
+import { logoutUser } from "../store/slices/authSlice";
+import { useTheme } from "../context/ThemeContext";
 import { Bell, Check, Search, Command, CheckSquare, PlusCircle, Wrench, Shield } from "lucide-react";
 import CommandPalette from "./CommandPalette";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import Button from "./ui/Button";
 
 export default function TopBar() {
   const { user } = useSelector((state) => state.auth);
   const { items: notifications } = useSelector((state) => state.notifications);
   const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const { toggleTheme } = useTheme();
   
   const [showNotifications, setShowNotifications] = useState(false);
   const [isPaletteOpen, setIsPaletteOpen] = useState(false);
@@ -25,17 +45,91 @@ export default function TopBar() {
     }
   }, [user, dispatch]);
 
-  // Handle global Cmd+K / Ctrl+K hotkey to trigger command palette
+  // Handle global hotkeys (Cmd+K, Alt+L, sequences for navigation & theme toggle)
   useEffect(() => {
+    let lastKey = "";
+    let lastKeyTime = 0;
+
     const handleGlobalKey = (e) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+      const key = e.key.toLowerCase();
+      
+      // 1. Toggle Command Palette with Cmd+K / Ctrl+K
+      if ((e.metaKey || e.ctrlKey) && key === "k") {
         e.preventDefault();
         setIsPaletteOpen((prev) => !prev);
+        return;
+      }
+
+      // 2. Ignore general shortcuts if any input/textarea is focused or if command palette is open
+      const isInputFocused = document.activeElement && (
+        document.activeElement.tagName === "INPUT" || 
+        document.activeElement.tagName === "TEXTAREA" || 
+        document.activeElement.isContentEditable
+      );
+      if (isInputFocused || isPaletteOpen) return;
+
+      const now = Date.now();
+
+      // 3. Alt+L (⌥ L) Sign Out
+      if (e.altKey && key === "l") {
+        e.preventDefault();
+        dispatch(logoutUser()).then(() => {
+          navigate("/signin");
+        });
+        return;
+      }
+
+      // 4. Sequential shortcuts
+      if (lastKey === "g" && now - lastKeyTime < 800) {
+        if (key === "d") {
+          e.preventDefault();
+          navigate("/dashboard");
+        } else if (key === "a") {
+          e.preventDefault();
+          navigate("/assets");
+        } else if (key === "l") {
+          e.preventDefault();
+          navigate("/allocations");
+        } else if (key === "b") {
+          e.preventDefault();
+          navigate("/bookings");
+        } else if (key === "m") {
+          e.preventDefault();
+          navigate("/maintenance");
+        } else if (key === "u") {
+          e.preventDefault();
+          navigate("/audits");
+        } else if (key === "e" && ["ADMIN", "ASSET_MANAGER"].includes(user?.role)) {
+          e.preventDefault();
+          navigate("/employees");
+        } else if (key === "r" && ["ADMIN", "ASSET_MANAGER"].includes(user?.role)) {
+          e.preventDefault();
+          navigate("/reports");
+        } else if (key === "g" && ["ADMIN", "ASSET_MANAGER"].includes(user?.role)) {
+          e.preventDefault();
+          navigate("/logs");
+        } else if (key === "o" && user?.role === "ADMIN") {
+          e.preventDefault();
+          navigate("/organization");
+        }
+        lastKey = "";
+      } else if (lastKey === "t" && now - lastKeyTime < 800) {
+        if (key === "t") {
+          e.preventDefault();
+          toggleTheme();
+        }
+        lastKey = "";
+      } else {
+        if (key === "g" || key === "t") {
+          lastKey = key;
+          lastKeyTime = now;
+        }
       }
     };
+    
     window.addEventListener("keydown", handleGlobalKey);
     return () => window.removeEventListener("keydown", handleGlobalKey);
-  }, []);
+  }, [user, isPaletteOpen, dispatch, navigate, toggleTheme]);
 
   const unreadCount = notifications.filter(n => !n.is_read).length;
 

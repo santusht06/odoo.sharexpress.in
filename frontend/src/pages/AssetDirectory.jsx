@@ -1,5 +1,22 @@
+/*
+ * Copyright 2026 Sharexpress Contributors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 import React, { useEffect, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
+import { useSearchParams } from "react-router-dom";
 import { fetchAssets, createAsset } from "../store/slices/assetSlice";
 import { fetchCategories } from "../store/slices/categorySlice";
 import { fetchDepartments } from "../store/slices/departmentSlice";
@@ -15,6 +32,8 @@ import ImageModal from "../components/ui/ImageModal";
 
 export default function AssetDirectory() {
   const dispatch = useDispatch();
+  const [searchParams, setSearchParams] = useSearchParams();
+  
   const { items: assets, loading } = useSelector((state) => state.assets);
   const { items: categories } = useSelector((state) => state.categories);
   const { items: departments } = useSelector((state) => state.departments);
@@ -25,9 +44,9 @@ export default function AssetDirectory() {
   const [loadingDetails, setLoadingDetails] = useState(false);
 
   // Filter states
-  const [searchVal, setSearchVal] = useState("");
-  const [catFilter, setCatFilter] = useState("");
-  const [statusFilter, setStatusFilter] = useState("");
+  const [searchVal, setSearchVal] = useState(searchParams.get("search") || "");
+  const [catFilter, setCatFilter] = useState(searchParams.get("category_id") || "");
+  const [statusFilter, setStatusFilter] = useState(searchParams.get("status") || "");
 
   // Create form states
   const [name, setName] = useState("");
@@ -80,14 +99,34 @@ export default function AssetDirectory() {
   };
 
   useEffect(() => {
-    refreshAssets();
     dispatch(fetchCategories());
     dispatch(fetchDepartments());
   }, [dispatch]);
 
+  // Synchronize state and trigger search when URL search params change
+  useEffect(() => {
+    const searchParam = searchParams.get("search") || "";
+    const catParam = searchParams.get("category_id") || "";
+    const statusParam = searchParams.get("status") || "";
+
+    setSearchVal(searchParam);
+    setCatFilter(catParam);
+    setStatusFilter(statusParam);
+
+    dispatch(fetchAssets({
+      search: searchParam || undefined,
+      category_id: catParam || undefined,
+      status: statusParam || undefined
+    }));
+  }, [dispatch, searchParams]);
+
   const handleFilterSubmit = (e) => {
     e.preventDefault();
-    refreshAssets();
+    const params = {};
+    if (searchVal) params.search = searchVal;
+    if (catFilter) params.category_id = catFilter;
+    if (statusFilter) params.status = statusFilter;
+    setSearchParams(params);
   };
 
   const handleCreateAsset = (e) => {
